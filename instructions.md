@@ -58,11 +58,11 @@ To automatically build and deploy your app every time you push to your `main` br
            run: npm ci
    
          - name: Build the Angular app
-           # Replace <your-username> and <repo-name> with your repository details 2.0
-           run: npm run build -- --base-href="https://github.com/deneth-rajapaksha/nucla-dashboard/"
+           # The base-href MUST be your github.io URL, not the github.com repo URL
+           run: npm run build -- --base-href="https://deneth-rajapaksha.github.io/nucla-dashboard/"
    
          - name: Deploy to GitHub Pages
-           uses: peaceiris/actions-gh-pages@v3
+           uses: peaceiris/actions-gh-pages@v4
            with:
              github_token: ${{ secrets.GITHUB_TOKEN }}
              # Make sure this matches your Angular 'outputMode' directory structure. 

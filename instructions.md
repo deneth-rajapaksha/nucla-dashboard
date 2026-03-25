@@ -47,10 +47,10 @@ To automatically build and deploy your app every time you push to your `main` br
        runs-on: ubuntu-latest
        steps:
          - name: Checkout repository
-           uses: actions/checkout@v3
+           uses: actions/checkout@v4
    
          - name: Setup Node.js
-           uses: actions/setup-node@v3
+           uses: actions/setup-node@v4
            with:
              node-version: '20' # Required for recent Angular apps
    

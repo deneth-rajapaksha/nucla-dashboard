@@ -58,7 +58,7 @@ To automatically build and deploy your app every time you push to your `main` br
            run: npm ci
    
          - name: Build the Angular app
-           # Replace <your-username> and <repo-name> with your repository details
+           # Replace <your-username> and <repo-name> with your repository details 2.0
            run: npm run build -- --base-href="https://github.com/deneth-rajapaksha/nucla-dashboard/"
    
          - name: Deploy to GitHub Pages

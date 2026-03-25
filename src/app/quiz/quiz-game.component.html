@@ -1,0 +1,339 @@
+<!-- ═══════════════════════════════════════════════════════════════════
+     ATOMIC QUIZ SHOW — Main Component Template
+     ═══════════════════════════════════════════════════════════════════ -->
+
+<div class="aq-page">
+
+  <!-- ── LOADING OVERLAY ─────────────────────────────────────── -->
+  <div class="aq-loading-overlay" *ngIf="isLoading">
+    <div class="aq-loading-inner">
+      <div class="aq-spinner">
+        <span class="spin-orbit spin-1"></span>
+        <span class="spin-orbit spin-2"></span>
+        <span class="spin-orbit spin-3"></span>
+        <span class="spin-nucleus">⚛</span>
+      </div>
+      <p class="aq-loading-msg">{{ loadingMessage }}</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       PHASE: LANDING
+       ══════════════════════════════════════════════════════════ -->
+  <div class="aq-stage" *ngIf="phase === 'landing'">
+
+    <!-- Stars -->
+    <div class="aq-stars" aria-hidden="true">
+      <span *ngFor="let s of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]"
+            class="aq-star"
+            [style.top.%]="(s * 17) % 97"
+            [style.left.%]="(s * 31) % 97"
+            [style.animation-delay.s]="(s * 0.4) % 4">
+      </span>
+    </div>
+
+    <!-- Logo bar -->
+    <div class="aq-logo-bar">
+      <span class="aq-logo-chip proton-chip">p⁺</span>
+      <div class="aq-logo-text">
+        <span class="aq-show-label">THE ATOMIC QUIZ SHOW</span>
+        <h1 class="aq-show-title">PARTICLE <em>CHAMPIONS</em></h1>
+      </div>
+      <span class="aq-logo-chip electron-chip">e⁻</span>
+    </div>
+
+    <!-- Host trio -->
+    <div class="aq-host-trio">
+      <div class="aq-host-card host-proton">
+        <div class="host-orb"><span class="host-symbol">p⁺</span></div>
+        <div class="host-info">
+          <h3>Prof. Proton</h3>
+          <p>The Positive Force</p>
+        </div>
+      </div>
+      <div class="aq-host-card host-neutron featured-host">
+        <div class="host-orb"><span class="host-symbol">n⁰</span></div>
+        <div class="host-info">
+          <h3>Dr. Neutron</h3>
+          <p>The Balanced One</p>
+        </div>
+      </div>
+      <div class="aq-host-card host-electron">
+        <div class="host-orb"><span class="host-symbol">e⁻</span></div>
+        <div class="host-info">
+          <h3>Agent Electron</h3>
+          <p>Speed of Thought</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info grid -->
+    <div class="aq-info-grid">
+      <div class="aq-info-tile">
+        <span class="aq-info-icon">🏆</span>
+        <span class="aq-info-label">10 Levels</span>
+      </div>
+      <div class="aq-info-tile">
+        <span class="aq-info-icon">❓</span>
+        <span class="aq-info-label">50 Questions</span>
+      </div>
+      <div class="aq-info-tile">
+        <span class="aq-info-icon">⚡</span>
+        <span class="aq-info-label">MCQ Format</span>
+      </div>
+      <div class="aq-info-tile">
+        <span class="aq-info-icon">⏱</span>
+        <span class="aq-info-label">Timed Levels</span>
+      </div>
+    </div>
+
+    <button class="aq-btn aq-btn-start" (click)="startGame()">
+      <span class="btn-glow"></span>
+      ⚡ START THE SHOW
+    </button>
+
+    <p class="aq-disclaimer">
+      Three hosts · 10 levels · 5 questions each · All answers scored server-side
+    </p>
+  </div><!-- /landing -->
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       PHASE: PLAYING
+       ══════════════════════════════════════════════════════════ -->
+  <div class="aq-stage aq-stage--playing" *ngIf="phase === 'playing'">
+
+    <!-- TOP HUD -->
+    <div class="aq-hud">
+      <div class="aq-hud-left">
+        <span class="aq-hud-label">LEVEL</span>
+        <span class="aq-hud-value">{{ currentLevel }}<span class="aq-hud-of">/10</span></span>
+      </div>
+      <div class="aq-hud-center">
+        <div class="aq-progress-bar">
+          <div class="aq-progress-fill" [style.width.%]="overallProgress"></div>
+        </div>
+        <span class="aq-hud-label">{{ answeredCount }} / 50 answered</span>
+      </div>
+      <div class="aq-hud-right">
+        <span class="aq-hud-label">TIME</span>
+        <span class="aq-hud-value aq-timer">{{ formattedTimer }}</span>
+      </div>
+    </div>
+
+    <!-- LEVEL TRACK (mini dots) -->
+    <div class="aq-level-track">
+      <div *ngFor="let lv of LEVELS; trackBy: trackByIndex"
+           class="aq-lv-dot"
+           [class.lv-done]="getLevelStatus(lv) === 'completed'"
+           [class.lv-now]="getLevelStatus(lv) === 'current'">
+        {{ lv }}
+      </div>
+    </div>
+
+    <!-- HOST PRESENTER -->
+    <div class="aq-host-presenter" [class.host-entering]="hostEntrance"
+         [ngClass]="'presenter-' + currentQuestion.host">
+      <div class="host-presenter-orb">
+        <span class="host-presenter-symbol">{{ HOSTS[currentQuestion.host].symbol }}</span>
+        <div class="host-presenter-ring ring-1"></div>
+        <div class="host-presenter-ring ring-2"></div>
+      </div>
+      <div class="host-presenter-info">
+        <span class="host-presenter-name">{{ HOSTS[currentQuestion.host].name }}</span>
+        <span class="host-presenter-tagline">"{{ HOSTS[currentQuestion.host].tagline }}"</span>
+      </div>
+    </div>
+
+    <!-- QUESTION CARD -->
+    <div class="aq-question-card" [class.q-reveal]="questionReveal">
+
+      <!-- Question header -->
+      <div class="aq-q-header">
+        <span class="aq-q-badge">Q{{ currentQuestionInLevel + 1 }} of 5</span>
+        <span class="aq-q-level-badge">Level {{ currentLevel }}</span>
+      </div>
+
+      <!-- Question text -->
+      <p class="aq-q-text">{{ currentQuestion.question }}</p>
+
+      <!-- Option level progress pips -->
+      <div class="aq-q-pips">
+        <span *ngFor="let pip of [0,1,2,3,4]; trackBy: trackByIndex"
+              class="aq-pip"
+              [class.pip-done]="pip < currentQuestionInLevel"
+              [class.pip-active]="pip === currentQuestionInLevel">
+        </span>
+      </div>
+
+      <!-- Options -->
+      <div class="aq-options-grid">
+        <button *ngFor="let opt of currentQuestion.options; let i = index; trackBy: trackByIndex"
+                class="aq-option-btn"
+                [class.option-selected]="selectedOption === i && !isAnswerLocked"
+                [class.option-correct]="isAnswerLocked && i === currentQuestion.correctIndex"
+                [class.option-wrong]="isAnswerLocked && i === selectedOption && i !== currentQuestion.correctIndex"
+                [class.option-dimmed]="isAnswerLocked && i !== currentQuestion.correctIndex && i !== selectedOption"
+                [disabled]="isAnswerLocked"
+                (click)="selectOption(i)">
+          <span class="opt-label">{{ ['A','B','C','D'][i] }}</span>
+          <span class="opt-text">{{ opt }}</span>
+          <span class="opt-check" *ngIf="isAnswerLocked && i === currentQuestion.correctIndex">✓</span>
+          <span class="opt-cross" *ngIf="isAnswerLocked && i === selectedOption && i !== currentQuestion.correctIndex">✗</span>
+        </button>
+      </div>
+
+    </div><!-- /question-card -->
+
+  </div><!-- /playing -->
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       PHASE: LEVEL SUMMARY
+       ══════════════════════════════════════════════════════════ -->
+  <div class="aq-stage aq-stage--summary" *ngIf="phase === 'levelSummary'">
+
+    <div class="aq-summary-card">
+
+      <div class="aq-summary-badge">
+        LEVEL {{ currentLevelIndex }} COMPLETE
+      </div>
+
+      <div class="aq-summary-score-ring">
+        <svg viewBox="0 0 100 100" class="aq-ring-svg">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>
+          <circle cx="50" cy="50" r="42" fill="none"
+                  stroke="var(--accent)"
+                  stroke-width="8"
+                  [attr.stroke-dasharray]="(getLevelScore(currentLevelIndex) * 52.78) + ' 263.9'"
+                  stroke-linecap="round"
+                  transform="rotate(-90 50 50)"/>
+        </svg>
+        <div class="aq-ring-label">
+          <span class="aq-ring-num">{{ getLevelScore(currentLevelIndex) }}</span>
+          <span class="aq-ring-den">/5</span>
+        </div>
+      </div>
+
+      <p class="aq-summary-time">
+        ⏱ Level time: <strong>{{ getLevelTime(currentLevelIndex) }}</strong>
+      </p>
+
+      <div class="aq-summary-answers">
+        <div *ngFor="let q of questionsForCurrentLevel; let i = index; trackBy: trackByIndex"
+             class="aq-summary-row"
+             [class.row-correct]="answers[(currentLevelIndex-1)*5+i] === q.correctIndex"
+             [class.row-wrong]="answers[(currentLevelIndex-1)*5+i] !== q.correctIndex && answers[(currentLevelIndex-1)*5+i] !== -1">
+          <span class="sum-q-num">Q{{ i+1 }}</span>
+          <span class="sum-q-short">{{ q.question | slice:0:55 }}…</span>
+          <span class="sum-verdict">
+            {{ answers[(currentLevelIndex-1)*5+i] === q.correctIndex ? '✓' : '✗' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- If this was the LAST level, show Submit; else Next Level -->
+      <ng-container *ngIf="currentLevelIndex === 10; else hasMoreLevels">
+        <p class="aq-summary-final-msg">🎉 All 10 levels completed! Ready to see your score?</p>
+        <p class="aq-payload-preview">
+          Answers: [{{ answers.join(', ') }}]<br>
+          Level times (s): [{{ levelTimes.join(', ') }}]
+        </p>
+        <button class="aq-btn aq-btn-submit" (click)="submitQuiz()">
+          <span class="btn-glow"></span>
+          🚀 SUBMIT & GET SCORE
+        </button>
+        <p *ngIf="errorMessage" class="aq-error">{{ errorMessage }}</p>
+      </ng-container>
+
+      <ng-template #hasMoreLevels>
+        <button class="aq-btn aq-btn-next" (click)="nextLevel()">
+          ▶ NEXT LEVEL →
+        </button>
+      </ng-template>
+
+    </div>
+
+  </div><!-- /levelSummary -->
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       PHASE: RESULTS
+       ══════════════════════════════════════════════════════════ -->
+  <div class="aq-stage aq-stage--results" *ngIf="phase === 'results' && quizResult">
+
+    <!-- Confetti particles -->
+    <div class="aq-particles" *ngIf="particleEffect" aria-hidden="true">
+      <span *ngFor="let p of [1,2,3,4,5,6,7,8,9,10,11,12]"
+            class="particle"
+            [style.left.%]="(p * 8) % 100"
+            [style.animation-delay.ms]="p * 120">
+      </span>
+    </div>
+
+    <div class="aq-results-card">
+
+      <div class="aq-results-logo">
+        <span class="aq-logo-chip proton-chip">p⁺</span>
+        RESULTS
+        <span class="aq-logo-chip electron-chip">e⁻</span>
+      </div>
+
+      <!-- Grade badge -->
+      <div class="aq-grade-badge">
+        <span class="aq-grade-letter">{{ quizResult.grade }}</span>
+      </div>
+
+      <!-- Score stats -->
+      <div class="aq-result-stats">
+        <div class="aq-stat-tile">
+          <span class="aq-stat-value">{{ quizResult.score }}</span>
+          <span class="aq-stat-label">POINTS</span>
+        </div>
+        <div class="aq-stat-tile">
+          <span class="aq-stat-value">{{ quizResult.correctAnswers }}/{{ quizResult.totalQuestions }}</span>
+          <span class="aq-stat-label">CORRECT</span>
+        </div>
+        <div class="aq-stat-tile">
+          <span class="aq-stat-value">{{ quizResult.percentage }}%</span>
+          <span class="aq-stat-label">ACCURACY</span>
+        </div>
+      </div>
+
+      <p class="aq-result-message">{{ quizResult.message }}</p>
+
+      <!-- Level breakdown -->
+      <div class="aq-level-breakdown">
+        <h4 class="aq-breakdown-title">Level Breakdown</h4>
+        <div class="aq-breakdown-grid">
+          <div *ngFor="let lv of LEVELS; trackBy: trackByIndex"
+               class="aq-breakdown-row">
+            <span class="breakdown-lv">Lv {{ lv }}</span>
+            <div class="breakdown-bar-wrap">
+              <div class="breakdown-bar"
+                   [style.width.%]="getLevelScore(lv) * 20"
+                   [class.bar-perfect]="getLevelScore(lv) === 5">
+              </div>
+            </div>
+            <span class="breakdown-score">{{ getLevelScore(lv) }}/5</span>
+            <span class="breakdown-time">{{ getLevelTime(lv) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Raw payload display -->
+      <div class="aq-raw-payload">
+        <h5>Submitted Payload</h5>
+        <code>answers: [{{ answers.join(', ') }}]</code>
+        <code>levelTimes: [{{ levelTimes.join(', ') }}]</code>
+      </div>
+
+      <button class="aq-btn aq-btn-restart" (click)="restartGame()">
+        🔄 PLAY AGAIN
+      </button>
+
+    </div>
+
+  </div><!-- /results -->
+
+</div><!-- /aq-page -->

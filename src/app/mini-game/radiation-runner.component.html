@@ -1,0 +1,196 @@
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║              RADIATION RUNNER — Angular Template             ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+
+<div class="runner-root">
+
+  <!-- ═══ HEADER ═══════════════════════════════════════════════════ -->
+  <header class="game-header">
+    <div class="header-badge">☢ Educational Game</div>
+    <h1 class="header-title">Radiation Runner</h1>
+    <p class="header-desc">
+      <strong>Radioactive doesn't mean it's explosive and kills you instantly.</strong>
+      We are all exposed to radiation in our day-to-day life. Play the Radiation Runner below
+      and explore how hard it is to reach a critical level — even if you face a lot of radiation sources.
+      <br><br>
+      <span class="warning-line">
+        ⚠️ <strong>Warning</strong> — that doesn't mean some radioactive objects can't harm you instantly.
+        You'll know once you play!
+      </span>
+      <br>
+      <em>Don't forget to read the additional facts below the game.</em>
+    </p>
+  </header>
+
+  <!-- ═══ GAME WRAPPER ════════════════════════════════════════════ -->
+  <div class="game-wrapper">
+
+    <canvas #gameCanvas class="game-canvas" width="900" height="379" (pointerdown)="onCanvasPointer()"></canvas>
+    <div #flashEl class="flash-overlay"></div>
+
+    <!-- Pause / Restart buttons top-left -->
+    <div class="game-controls" *ngIf="screenState === 'playing'">
+      <button class="ctrl-btn pause-btn" (click)="togglePause()" [title]="isPaused ? 'Resume (P)' : 'Pause (P)'">
+        {{ isPaused ? '▶' : '⏸' }}
+      </button>
+      <button class="ctrl-btn restart-icon-btn" (click)="onRestartClick()" title="Restart (R)">↺</button>
+    </div>
+
+    <!-- LOADING -->
+    <div class="overlay loading-overlay" id="loadingOverlay" [class.hidden]="screenState !== 'loading'">
+      <div class="game-title">☢ RADIATION RUNNER</div>
+      <div class="load-track"><div class="load-fill" [style.width.%]="loadProgress"></div></div>
+      <div class="load-text">{{ loadMessage }}</div>
+    </div>
+
+    <!-- START -->
+    <div class="overlay start-overlay" [class.hidden]="screenState !== 'start'">
+      <div class="game-title">☢ RADIATION RUNNER ☢</div>
+      <div class="game-sub">Dodge radiation sources — see how much it actually takes!</div>
+      <div class="fact-row">
+        <div class="fact-card" *ngFor="let obs of obstacleTypes">
+          <span class="fact-icon">{{ obs.emoji }}</span>
+          <strong>{{ obs.label }}</strong>
+          <span class="fact-dose" [style.color]="obs.color">
+            {{ obs.instantKill ? 'INSTANT ☠' : ((obs.doseUv < 1 ? (obs.doseUv | number:'1.2-2') : (obs.doseUv | number:'1.0-0')) + ' µSv') }}
+          </span>
+        </div>
+      </div>
+      <button class="big-btn" (click)="startGame()">▶ START RUNNING</button>
+      <div class="ctrl-chips">
+        <span class="ctrl-chip"><kbd>Space</kbd> / <kbd>↑</kbd> Jump</span>
+        <span class="ctrl-chip">Tap canvas to jump</span>
+        <span class="ctrl-chip"><kbd>P</kbd> Pause</span>
+        <span class="ctrl-chip">Double jump OK!</span>
+      </div>
+    </div>
+
+    <!-- DEATH -->
+    <div class="overlay death-overlay" [class.hidden]="screenState !== 'dead'">
+      <div class="death-title">☠ MONKEY DOWN ☠</div>
+      <div class="death-sub">
+        {{ lastHitLabel === 'Reactor Core' ? '⚡ Direct reactor core exposure — instant lethal dose!' : 'Radiation overdose — the banana caught up with you…' }}
+      </div>
+      <div class="death-stats">
+        <div class="stat-row"><span>🏃 Distance run</span>   <strong>{{ finalDist }}</strong></div>
+        <div class="stat-row"><span>⭐ Final score</span>    <strong>{{ finalScore }}</strong></div>
+        <div class="stat-row"><span>💥 Sources hit</span>    <strong>{{ finalHit }}</strong></div>
+        <div class="stat-row"><span>🟢 Sources dodged</span> <strong>{{ finalJumped }}</strong></div>
+        <div class="stat-row"><span>☢ Radiation total</span> <strong class="red">{{ finalDose }}</strong></div>
+        <div class="stat-row"><span>📊 Equivalent to</span>  <strong class="red">{{ finalEquiv }}</strong></div>
+      </div>
+      <button class="restart-btn" (click)="restartGame()">↺ TRY AGAIN</button>
+    </div>
+
+  </div><!-- /game-wrapper -->
+
+  <!-- ═══ HUD ══════════════════════════════════════════════════════ -->
+  <div class="hud">
+    <div class="gauge-wrap">
+      <span class="gauge-lbl">☢ RAD</span>
+      <div class="gauge-outer"><div class="gauge-fill" [style.height.%]="gaugePercent"></div></div>
+      <span class="gauge-icon">{{ gaugeIcon }}</span>
+      <span class="gauge-pct">{{ gaugePercent | number:'1.0-0' }}%</span>
+    </div>
+    <div class="hud-info">
+      <div class="score-row">
+        <div class="score-block">
+          <span class="score-lbl">Score</span>
+          <span class="score-val">{{ scoreDisplay }}</span>
+        </div>
+        <div class="score-block">
+          <span class="score-lbl">Distance</span>
+          <span class="score-val blue">{{ distDisplay }}</span>
+        </div>
+        <div class="score-block">
+          <span class="score-lbl">Sources Hit</span>
+          <span class="score-val yellow">{{ hitDisplay }}</span>
+        </div>
+      </div>
+      <div class="status-badge" [ngClass]="statusClass">{{ statusText }}</div>
+    </div>
+    <div class="event-log hide-sm">
+      <div *ngFor="let ev of events; trackBy: trackEvent" class="event-item" [ngClass]="'ev-' + ev.type">{{ ev.msg }}</div>
+    </div>
+    <div class="ctrl-hint hide-sm">
+      <div class="key-badge"><kbd>Space</kbd> Jump</div>
+      <div class="key-badge"><kbd>↑</kbd> Jump</div>
+      <div class="key-badge"><kbd>P</kbd> Pause</div>
+    </div>
+  </div>
+
+  <!-- ═══ GUIDE ═════════════════════════════════════════════════════ -->
+  <section class="guide-section">
+    <div class="guide-header">
+      <div>
+        <h2 class="guide-title">☢ Real-World Radiation Guide</h2>
+        <p class="guide-sub">Radiation is all around us — but <strong>accumulated dose</strong> is what matters.</p>
+      </div>
+      <!-- Filter chips (filterChips) -->
+      <div class="filter-chips">
+        <button *ngFor="let f of filterOptions" class="filter-chip" [class.active]="activeFilter === f" (click)="setFilter(f)">{{ f }}</button>
+      </div>
+    </div>
+
+    <div class="obstacle-legend">
+      <div class="legend-title">In-Game Obstacles &amp; Their Real Doses</div>
+      <div class="legend-row">
+        <div class="legend-item" *ngFor="let obs of obstacleTypes">
+          <span class="leg-emoji">{{ obs.emoji }}</span>
+          <div class="leg-info">
+            <strong>{{ obs.label }}</strong>
+            <span [style.color]="obs.color">{{ obs.instantKill ? '☠ INSTANT KILL' : ((obs.doseUv < 1 ? (obs.doseUv | number:'1.2-2') : (obs.doseUv | number:'1.0-0')) + ' µSv') }}</span>
+          </div>
+          <div class="leg-bar-wrap">
+            <div class="leg-bar" [style.width]="obs.instantKill ? '100%' : getDoseBarWidth(obs.doseUv)" [style.background]="obs.color"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-grid">
+      <div *ngFor="let entry of filteredGuide" class="guide-card" [ngClass]="'cat-' + entry.category">
+        <div class="guide-card-head">
+          <span class="guide-emoji">{{ entry.emoji }}</span>
+          <div class="guide-meta">
+            <strong class="guide-source">{{ entry.source }}</strong>
+            <span class="guide-dose" [ngClass]="'dose-' + entry.category">{{ entry.dose }}</span>
+          </div>
+          <span class="cat-badge" [ngClass]="'badge-' + entry.category">{{ entry.category }}</span>
+        </div>
+        <div class="dose-bar-track">
+          <div class="dose-bar-fill" [ngClass]="'fill-' + entry.category" [style.width]="getDoseBarWidth(entry.doseValue)"></div>
+        </div>
+        <p class="guide-desc">{{ entry.description }}</p>
+      </div>
+    </div>
+
+    <div class="dose-scale">
+      <div class="scale-title">Dose Scale (logarithmic) — µSv</div>
+      <div class="scale-bar">
+        <div class="scale-fill safe" style="width:16%"></div>
+        <div class="scale-fill low" style="width:18%"></div>
+        <div class="scale-fill medium" style="width:22%"></div>
+        <div class="scale-fill high" style="width:22%"></div>
+        <div class="scale-fill critical" style="width:22%"></div>
+      </div>
+      <div class="scale-labels">
+        <span>0.01</span><span>1</span><span>100</span><span>10,000</span><span>1,000,000</span>
+      </div>
+      <div class="scale-legend">
+        <span *ngFor="let cat of ['safe','low','medium','high','critical']" class="sleg" [ngClass]="'sleg-' + cat">{{ cat }}</span>
+      </div>
+    </div>
+
+    <div class="key-facts">
+      <div class="kf-item"><span class="kf-num">2,400</span><span class="kf-unit">µSv/yr</span><span class="kf-label">Natural background (average)</span></div>
+      <div class="kf-divider"></div>
+      <div class="kf-item"><span class="kf-num">1,000,000</span><span class="kf-unit">µSv</span><span class="kf-label">Threshold for radiation sickness</span></div>
+      <div class="kf-divider"></div>
+      <div class="kf-item"><span class="kf-num">35,000,000</span><span class="kf-unit">bananas</span><span class="kf-label">To equal a lethal dose</span></div>
+      <div class="kf-divider"></div>
+      <div class="kf-item"><span class="kf-num">20 mSv/yr</span><span class="kf-unit"></span><span class="kf-label">Safe limit for radiation workers</span></div>
+    </div>
+  </section>
+
+</div><!-- /runner-root -->

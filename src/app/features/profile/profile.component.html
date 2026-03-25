@@ -1,0 +1,144 @@
+<div class="profile-container">
+  <div class="profile-header">
+    <div class="header-content">
+      <div class="profile-avatar">
+        <mat-icon>account_circle</mat-icon>
+      </div>
+      <div class="header-text">
+        <h1>User profile</h1>
+        <p>Manage your personal identification and details.</p>
+      </div>
+    </div>
+    
+    <button class="btn-edit" (click)="toggleEditMode()" [class.active]="isEditing()">
+      <mat-icon>{{ isEditing() ? 'close' : 'edit' }}</mat-icon>
+      <span>{{ isEditing() ? 'Cancel' : 'Edit Profile' }}</span>
+    </button>
+    <button class="btn-primary" style="background:#e74c3c;border:none;margin-left:12px;" (click)="onLogout()">
+      <mat-icon style="vertical-align: middle;">logout</mat-icon> Logout
+    </button>
+  </div>
+
+  <div class="profile-body">
+    
+    <!-- Loading State -->
+    <div *ngIf="isLoading()" class="state-loading">
+      <div class="spinner"></div>
+      <p>Retrieving dossier...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="errorMsg() && !originalProfile" class="state-error">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ errorMsg() }}</p>
+      <button class="btn-retry" (click)="fetchProfile()">Try Again</button>
+    </div>
+
+    <!-- Success Feedback Overlay -->
+    <div *ngIf="successMsg()" class="alert-success">
+      <mat-icon>check_circle</mat-icon>
+      {{ successMsg() }}
+    </div>
+
+    <!-- Global form error on save -->
+    <div *ngIf="errorMsg() && originalProfile" class="alert-error">
+      <mat-icon>error_outline</mat-icon>
+      {{ errorMsg() }}
+    </div>
+
+    <!-- Profile Form -->
+    <form *ngIf="!isLoading() && originalProfile" 
+          [formGroup]="profileForm" 
+          (ngSubmit)="onSubmit()" 
+          class="profile-form" 
+          [class.read-only]="!isEditing()">
+      
+      <!-- Field: First Name -->
+      <div class="form-group" [class.has-error]="hasError('firstName', 'required') || hasError('firstName', 'pattern')">
+        <label for="firstName">First Name</label>
+        <div class="input-wrapper">
+          <mat-icon class="field-icon">badge</mat-icon>
+          <input type="text" id="firstName" formControlName="firstName" [readonly]="!isEditing()">
+        </div>
+        <span class="error-msg" *ngIf="hasError('firstName', 'required')">First name is required.</span>
+        <span class="error-msg" *ngIf="hasError('firstName', 'pattern')">Must not start or end with spaces.</span>
+      </div>
+
+      <!-- Field: Last Name -->
+      <div class="form-group" [class.has-error]="hasError('lastName', 'required') || hasError('lastName', 'pattern')">
+        <label for="lastName">Last Name</label>
+        <div class="input-wrapper">
+          <mat-icon class="field-icon">person</mat-icon>
+          <input type="text" id="lastName" formControlName="lastName" [readonly]="!isEditing()">
+        </div>
+        <span class="error-msg" *ngIf="hasError('lastName', 'required')">Last name is required.</span>
+        <span class="error-msg" *ngIf="hasError('lastName', 'pattern')">Must not start or end with spaces.</span>
+      </div>
+
+      <!-- Field: Age -->
+      <div class="form-group" [class.has-error]="hasError('age', 'required') || hasError('age', 'min') || hasError('age', 'max')">
+        <label for="age">Age</label>
+        <div class="input-wrapper">
+          <mat-icon class="field-icon">cake</mat-icon>
+          <input type="number" id="age" formControlName="age" [readonly]="!isEditing()" min="1" max="120">
+        </div>
+        <span class="error-msg" *ngIf="hasError('age', 'required')">Age is required.</span>
+        <span class="error-msg" *ngIf="hasError('age', 'min')">Age must be at least 1.</span>
+        <span class="error-msg" *ngIf="hasError('age', 'max')">Age must be 120 or under.</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions" *ngIf="isEditing()">
+        <button type="button" class="btn-cancel" (click)="toggleEditMode()" [disabled]="isSaving()">Cancel</button>
+        <button type="submit" class="btn-save" [disabled]="profileForm.invalid || isSaving() || profileForm.pristine">
+          <span *ngIf="!isSaving()">Save Changes</span>
+          <span *ngIf="isSaving()" class="btn-spinner"></span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Change Password Section -->
+    <div style="margin-top: 40px; border-top: 1px solid #f0f5fc; padding-top: 32px;" *ngIf="!isLoading() && originalProfile">
+      <h2 style="font-size: 20px; color: #0a1a2e; margin-bottom: 24px;">Security Settings</h2>
+      
+      <!-- Password States -->
+      <div *ngIf="passwordSuccessMsg()" class="alert-success">
+        <mat-icon>check_circle</mat-icon>
+        {{ passwordSuccessMsg() }}
+      </div>
+      <div *ngIf="passwordErrorMsg()" class="alert-error">
+        <mat-icon>error_outline</mat-icon>
+        {{ passwordErrorMsg() }}
+      </div>
+
+      <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="profile-form">
+        <div class="form-group" [class.has-error]="hasPasswordError('oldPassword', 'required')">
+          <label for="oldPassword">Current Password</label>
+          <div class="input-wrapper">
+            <mat-icon class="field-icon">lock</mat-icon>
+            <input type="password" id="oldPassword" formControlName="oldPassword" placeholder="Enter current password...">
+          </div>
+          <span class="error-msg" *ngIf="hasPasswordError('oldPassword', 'required')">Current password is required.</span>
+        </div>
+
+        <div class="form-group" [class.has-error]="hasPasswordError('newPassword', 'required') || hasPasswordError('newPassword', 'minlength')">
+          <label for="newPassword">New Password</label>
+          <div class="input-wrapper">
+            <mat-icon class="field-icon">key</mat-icon>
+            <input type="password" id="newPassword" formControlName="newPassword" placeholder="Enter new password (min 6 chars)...">
+          </div>
+          <span class="error-msg" *ngIf="hasPasswordError('newPassword', 'required')">New password is required.</span>
+          <span class="error-msg" *ngIf="hasPasswordError('newPassword', 'minlength')">Must be at least 6 characters.</span>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-save" [disabled]="passwordForm.invalid || isChangingPassword()">
+            <span *ngIf="!isChangingPassword()">Change Password</span>
+            <span *ngIf="isChangingPassword()" class="btn-spinner"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>

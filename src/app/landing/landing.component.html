@@ -1,0 +1,373 @@
+<div class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-white">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
+<div class="text-2xl font-bold tracking-tighter text-blue-800 dark:text-blue-300 font-headline">Nuclaflux</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="font-['Plus_Jakarta_Sans'] font-medium text-sm tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors" href="#">Simulations</a>
+<a class="font-['Plus_Jakarta_Sans'] font-medium text-sm tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors" href="#">Articles</a>
+<a class="font-['Plus_Jakarta_Sans'] font-medium text-sm tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors" routerLink="/quiz">Quizzes</a>
+<a class="font-['Plus_Jakarta_Sans'] font-medium text-sm tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors" href="#">Vision</a>
+</div>
+<div class="flex items-center gap-4">
+<button (click)="openAuth('login')" class="font-['Plus_Jakarta_Sans'] font-medium text-sm tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors px-4 py-2 hover:bg-slate-100/50 rounded-lg cursor-pointer">Login</button>
+<button (click)="openAuth('signup')" class="bg-primary text-white px-6 py-2 rounded-full font-headline font-semibold text-sm hover:opacity-90 transition-all scale-95 duration-200 active:opacity-80 cursor-pointer">Sign Up</button>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<header class="relative pt-32 pb-20 overflow-hidden min-h-[921px] flex items-center">
+<div class="absolute inset-0 particle-bg pointer-events-none"></div>
+<div class="max-w-7xl mx-auto px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-7 space-y-8 relative z-10">
+<div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary-container text-on-secondary-container font-medium text-xs tracking-wide">
+<span class="material-symbols-outlined text-[16px]">science</span>
+                    THE SCHOLARLY LAB
+                </div>
+<h1 class="text-5xl lg:text-7xl font-headline font-extrabold text-primary leading-[1.1] tracking-tight">
+                    Master Nuclear Physics. <span class="text-on-surface">One Particle at a Time.</span>
+</h1>
+<p class="text-lg text-on-surface-variant max-w-xl leading-relaxed">
+                    Dive into the atomic world. Nuclaflux is the ultimate interactive learning platform for early teens to explore nuclear physics, understand radiation, and bust common myths.
+                </p>
+<div class="flex flex-wrap gap-4 pt-4">
+<button (click)="openAuth('signup')" class="bg-gradient-to-br from-primary to-primary-container text-white px-8 py-4 rounded-full font-headline font-bold text-base shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all cursor-pointer">
+                        Start Learning Free
+                    </button>
+<button class="text-primary px-8 py-4 rounded-full font-headline font-bold text-base hover:bg-surface-container-low transition-all cursor-pointer">
+                        Explore Features
+                    </button>
+</div>
+</div>
+<div class="lg:col-span-5 relative">
+<div class="relative w-full aspect-square rounded-[3rem] bg-surface-container-lowest shadow-2xl flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent"></div>
+<img class="w-full h-full object-cover mix-blend-multiply opacity-80" alt="Abstract 3D visualization of an atom" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPPuYa-Fs1_lnwO8gyH_YcjBGYJo-4osPtu6VQIMYzFfNVVcnIwVXmMpqD3Lt15cpD1GV1tmuCXZvlO4TyE6ww8rF2tkcU6wcq2BLuMa4SDVKknDCpvYmLRiWKN_CNmoiNRRARq_P2zuGAnh6Ub6EahpK_akd57qKOK8LUzEkI-bnXNtOoCu6oBzx7N1dxXCZpH00m7WHHAbd4ARucM1ADvUIYj_1yutx-zAIvCFqW6DJn8Zhw7a2Ls3KAQ3raNJ_R19m_1afxB-y0"/>
+<!-- Floating Glass Element -->
+<div class="absolute bottom-8 right-8 bg-white/80 backdrop-blur-xl p-6 rounded-2xl shadow-xl max-w-[200px] border border-white/50">
+<div class="flex items-center gap-3 mb-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">Live Tracker</span>
+</div>
+<div class="text-2xl font-headline font-bold text-primary">Isotope-235</div>
+<div class="mt-4 h-1 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary shadow-[0_0_8px_#006a65]" style="width: 70%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Features Section -->
+<section class="py-24 bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-8">
+<div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-16">
+<div class="max-w-2xl">
+<h2 class="text-3xl lg:text-4xl font-headline font-bold text-primary mb-4">Inside the Nuclaflux App</h2>
+<p class="text-on-surface-variant text-lg leading-relaxed">Experience physics through interactive simulations and games designed to make complex concepts intuitive.</p>
+</div>
+<div class="hidden md:block">
+<span class="material-symbols-outlined text-primary text-5xl opacity-20">biotech</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-8 rounded-xl group hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 flex flex-col h-full">
+<div class="w-14 h-14 rounded-xl bg-primary/5 flex items-center justify-center text-primary mb-8 group-hover:bg-primary group-hover:text-white transition-all">
+<span class="material-symbols-outlined text-3xl">precision_manufacturing</span>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-surface mb-4">Nuclear Reactor Simulator</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-8 flex-grow">Take control of a virtual nuclear reactor. Manage control rods, monitor coolant temperatures, and learn how we harness atomic energy safely.</p>
+<div class="flex items-center text-primary font-bold text-sm gap-2 cursor-pointer group/link">
+                        Try Simulator
+                        <span class="material-symbols-outlined text-sm group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest p-8 rounded-xl group hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 flex flex-col h-full">
+<div class="w-14 h-14 rounded-xl bg-secondary/5 flex items-center justify-center text-secondary mb-8 group-hover:bg-secondary group-hover:text-white transition-all">
+<span class="material-symbols-outlined text-3xl">bubble_chart</span>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-surface mb-4">Atomic Reaction Sandbox</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-8 flex-grow">A small-scale simulator where you can drag and drop protons, neutrons, and electrons. Watch in real-time how different isotopes behave.</p>
+<div class="flex items-center text-secondary font-bold text-sm gap-2 cursor-pointer group/link">
+                        Open Sandbox
+                        <span class="material-symbols-outlined text-sm group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest p-8 rounded-xl group hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 flex flex-col h-full">
+<div class="w-14 h-14 rounded-xl bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed mb-8 group-hover:bg-tertiary group-hover:text-white transition-all">
+<span class="material-symbols-outlined text-3xl">health_and_safety</span>
+</div>
+<h3 class="text-xl font-headline font-bold text-on-surface mb-4">Radiation Exposure Mini-Game</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-8 flex-grow">Bust the myths! Learn that not all radiation is harmful. Navigate everyday scenarios and discover sources of background radiation.</p>
+<div class="flex items-center text-tertiary font-bold text-sm gap-2 cursor-pointer group/link">
+                        Play Game
+                        <span class="material-symbols-outlined text-sm group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Content & Articles -->
+<section class="py-24">
+<div class="max-w-7xl mx-auto px-8 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+<div class="order-2 lg:order-1 relative">
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-4">
+<img class="rounded-2xl w-full h-48 object-cover shadow-lg" alt="Physics formula visualization" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnQxabSfRWl8-s38MqzBwnuaDTm2IkJIE8Fd_imdGPyX1EeM0HIanQGabff43HXWAoJE2W1f79jllz9MyiDw0BKjkAu4YwRKSp0gG2KNxSRpkA-9RIOxFcuF53p2s7AMx2tRsTVyeYNgps5J9tphVQnbiMvOK_IE3XNCO-6n-amcH-P3HpyOxjNn9kj_AD08VRlOly6cOC91eP2BdQDhM_vxQprrF8BRs98cm76wCI1zxo8eewsLpZCQmWWYvy7EH6L28dU2mFwsiR"/>
+<img class="rounded-2xl w-full h-64 object-cover shadow-lg" alt="Laboratory equipment background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNhCZYAjxXSVyzLmsXA3_mcEvYiYnrnApwfPohqalYn3Vw8cRx1MkApFnh2P01rQOCjEZXtoq7SAt0d3alotH_MK8SXYUFSun-uXHQ20shq-Z9AcbH0sI-Ribg2_o5UkuU7iWjlz7HLL6QDPBx7fSN2E-2ZdzB-5YG1r9T0DBK6w8SjZcluJTIKeoeZnswR-ZuUVUJU5FXIeWLi4O08AkEwdd_z0tXeD45YXjP3refrm9DMYUc-jX79p3aT3dZiCuDSJ5QR-BX_BoJ"/>
+</div>
+<div class="space-y-4 pt-8">
+<img class="rounded-2xl w-full h-64 object-cover shadow-lg" alt="Modern clean laboratory" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBrraOoI3xH_ET77Yc44K0G18Ya_rqeQzB2yYZvFMXRVhI9xHhp40TAqAPWZJWKm8aU_1hnXpSYamSOhWQ_U3IyYL2DrFfRp95PxRY_q0190tY50Wyz8aIusCWo_oJ2crbZI_5CN2YPAAEHPGaVaV5DgUdPLH_ZE6w3_gJdnl5gsqPTJElqWXh6AhaJ92nxCkZeJnaRjNQUDl4Faem1cIKJ7J2AGxVJtO8sidilQUKhXrtIOCBwHS5VKZHt1My0vYiTbJM7MqblhNL"/>
+<img class="rounded-2xl w-full h-48 object-cover shadow-lg" alt="Microscopic view of particles" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1lDBwgmiXVvlC-HdWh869uhhRPxtnpov0MDb56pqIhq7ZLFYuObbs-ECLGzSG3CUhUXNCHXOowpLiGEGUDqiwXuU-th60DmS0A90Ppa5aZu0LIkkeCpo_XIdxeMw_zM6MxQQlXvK9WYp2Y5hbQeiCg64OqkhCh97pCniFapgiklrOSSDwZX7qDtutj1Mr6vCHH_x58myNA7p_g6KdHtM9HIKbdKeDrKe_G48xWzPbM_yHE1s_DArif3R5WXanIB47FlG_Zu3ijPId"/>
+</div>
+</div>
+<!-- Leaderboard Mock -->
+<div class="absolute -bottom-10 -right-6 bg-white shadow-2xl rounded-2xl p-6 max-w-[240px] border border-surface-container">
+<h4 class="font-headline font-bold text-sm mb-4">Global Leaderboard</h4>
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-[10px] font-bold">AL</div>
+<span class="text-xs font-medium">Alex L.</span>
+</div>
+<span class="text-xs text-primary font-bold">2.4k pts</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-[10px] font-bold">SH</div>
+<span class="text-xs font-medium">Sarah H.</span>
+</div>
+<span class="text-xs text-primary font-bold">2.2k pts</span>
+</div>
+</div>
+</div>
+</div>
+<div class="order-1 lg:order-2 space-y-8">
+<h2 class="text-4xl font-headline font-bold text-primary leading-tight">Articles &amp; Global Quizzes</h2>
+<p class="text-lg text-on-surface-variant leading-relaxed">
+                    Read engaging, easy-to-understand articles curated by physics researchers. Test your knowledge in our quiz game and climb the global leaderboard to become a top physicist.
+                </p>
+<div class="space-y-4">
+<div class="flex gap-4 items-start p-4 rounded-xl hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined text-primary shadow-sm bg-white rounded flex items-center justify-center p-2 h-10 w-10">auto_stories</span>
+<div>
+<h4 class="font-headline font-bold text-on-surface mt-1">Curated Reading List</h4>
+<p class="text-sm text-on-surface-variant">From isotopes to fusion, everything explained simply.</p>
+</div>
+</div>
+<div class="flex gap-4 items-start p-4 rounded-xl hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined text-primary shadow-sm bg-white rounded flex items-center justify-center p-2 h-10 w-10">trophy</span>
+<div>
+<h4 class="font-headline font-bold text-on-surface mt-1">Daily Challenges</h4>
+<p class="text-sm text-on-surface-variant">Compete with students worldwide for the 'Top Physicist' badge.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Vision/Testimonial -->
+<section class="py-24 bg-surface-container-highest/20 overflow-hidden">
+<div class="max-w-4xl mx-auto px-8 text-center relative">
+<span class="material-symbols-outlined text-7xl text-primary opacity-10 absolute -top-10 left-0">format_quote</span>
+<blockquote class="relative">
+<p class="text-2xl lg:text-3xl font-headline font-medium text-primary italic leading-relaxed">
+                    "We are building the future Duolingo, Stack Overflow and LeetCode for Nuclear Physics. A place to learn, practice, and share knowledge."
+                </p>
+<footer class="mt-8 flex flex-col items-center">
+<div class="w-12 h-1 bg-secondary rounded-full mb-4"></div>
+<cite class="not-italic">
+<span class="block font-headline font-extrabold text-on-surface uppercase tracking-widest text-sm">The FLUX Team</span>
+<span class="block text-xs text-on-surface-variant mt-1">Founders of Nuclaflux</span>
+</cite>
+</footer>
+</blockquote>
+</div>
+</section>
+<!-- Community CTA -->
+<section class="py-24 relative">
+<div class="max-w-5xl mx-auto px-8">
+<div class="bg-primary-container rounded-[2rem] p-12 lg:p-20 text-center relative overflow-hidden">
+<div class="absolute inset-0 particle-bg opacity-20"></div>
+<div class="relative z-10 space-y-6">
+<h2 class="text-4xl lg:text-5xl font-headline font-extrabold text-white tracking-tight">Ready to split the atom?</h2>
+<p class="text-on-primary-container text-lg max-w-xl mx-auto opacity-90">
+                        Join thousands of students and start your journey into nuclear science today. Free forever for students.
+                    </p>
+<div class="flex flex-wrap justify-center gap-4 pt-6">
+<button (click)="openAuth('signup')" class="bg-white text-primary px-10 py-4 rounded-full font-headline font-bold text-base shadow-xl shadow-black/5 hover:scale-105 transition-all cursor-pointer">
+                            Join the Community
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-slate-50 dark:bg-slate-950 w-full py-12 px-8">
+<div class="flex flex-col md:flex-row justify-between items-center gap-6 max-w-7xl mx-auto">
+<div class="flex flex-col items-center md:items-start gap-2">
+<div class="text-lg font-bold text-blue-900 dark:text-blue-200 font-headline">Nuclaflux</div>
+<p class="font-['Inter'] text-xs text-slate-500 dark:text-slate-400">© 2024 Nuclaflux. The Scholarly Lab for Nuclear Physics.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="font-['Inter'] text-xs text-slate-500 dark:text-slate-400 hover:text-blue-500 underline underline-offset-4 opacity-100 hover:opacity-80 transition-opacity" href="#">Privacy Policy</a>
+<a class="font-['Inter'] text-xs text-slate-500 dark:text-slate-400 hover:text-blue-500 underline underline-offset-4 opacity-100 hover:opacity-80 transition-opacity" href="#">Terms of Service</a>
+<a class="font-['Inter'] text-xs text-slate-500 dark:text-slate-400 hover:text-blue-500 underline underline-offset-4 opacity-100 hover:opacity-80 transition-opacity" href="#">Curriculum</a>
+<a class="font-['Inter'] text-xs text-slate-500 dark:text-slate-400 hover:text-blue-500 underline underline-offset-4 opacity-100 hover:opacity-80 transition-opacity" href="#">Contact Us</a>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary transition-colors">public</span>
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary transition-colors">school</span>
+</div>
+</div>
+</footer>
+</div>
+
+<!-- Auth Modals -->
+@if (authView() !== 'none') {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-blue/40 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-silver relative">
+      <!-- Close Button -->
+      <button (click)="closeAuth()" class="absolute top-4 right-4 text-ash hover:text-dark-blue transition-colors">
+        <mat-icon>close</mat-icon>
+      </button>
+
+      <div class="p-8">
+        <div class="flex items-center gap-2 mb-8 justify-center">
+          <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold font-display text-xl">
+            N
+          </div>
+          <span class="font-display font-bold text-2xl tracking-tight text-dark-blue">NucLA</span>
+        </div>
+
+        <!-- Global Messages -->
+        @if (errorMessage()) {
+          <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+            {{ errorMessage() }}
+          </div>
+        }
+        @if (successMessage()) {
+          <div class="mb-6 p-4 bg-blue-600/20 border border-blue-600 text-dark-blue rounded-xl text-sm font-medium">
+            {{ successMessage() }}
+          </div>
+        }
+
+        <!-- Login Form -->
+        @if (authView() === 'login') {
+          <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="space-y-4">
+            <h2 class="text-2xl font-bold text-dark-blue mb-6 text-center font-display">Welcome Back</h2>
+            
+            <div>
+              <label for="login-username" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+              <input id="login-username" type="text" formControlName="username" class="w-full px-4 py-3 rounded-xl border border-silver focus:border-dark-blue focus:ring-2 focus:ring-dark-blue/20 outline-none transition-all bg-white text-dark-blue" placeholder="Enter your username">
+            </div>
+            
+            <div>
+              <label for="login-password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+              <input id="login-password" type="password" formControlName="password" class="w-full px-4 py-3 rounded-xl border border-silver focus:border-dark-blue focus:ring-2 focus:ring-dark-blue/20 outline-none transition-all bg-white text-dark-blue" placeholder="••••••••">
+            </div>
+
+            <div class="flex justify-end">
+              <button type="button" (click)="openAuth('forgot')" class="text-sm text-dark-blue hover:underline font-medium">Forgot Password?</button>
+            </div>
+
+            <button type="submit" [disabled]="isLoading()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-md disabled:opacity-50 mt-4">
+              {{ isLoading() ? 'Logging in...' : 'Log In' }}
+            </button>
+            
+            <p class="text-center text-sm text-slate-600 mt-6">
+              Don't have an account? <button type="button" (click)="openAuth('signup')" class="text-dark-blue font-bold hover:underline">Sign up</button>
+            </p>
+          </form>
+        }
+
+        <!-- Forgot Password Form -->
+        @if (authView() === 'forgot') {
+          <form [formGroup]="forgotForm" (ngSubmit)="onForgot()" class="space-y-4">
+            <h2 class="text-2xl font-bold text-dark-blue mb-2 text-center font-display">Reset Password</h2>
+            <p class="text-slate-600 text-sm text-center mb-6">Enter your details to receive a temporary password.</p>
+            
+            <div>
+              <label for="forgot-username" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+              <input id="forgot-username" type="text" formControlName="username" class="w-full px-4 py-3 rounded-xl border border-silver focus:border-dark-blue focus:ring-2 focus:ring-dark-blue/20 outline-none transition-all bg-white text-dark-blue" placeholder="Enter your username">
+            </div>
+            
+            <div>
+              <label for="forgot-email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <input id="forgot-email" type="email" formControlName="email" class="w-full px-4 py-3 rounded-xl border border-silver focus:border-dark-blue focus:ring-2 focus:ring-dark-blue/20 outline-none transition-all bg-white text-dark-blue" placeholder="Enter your email address">
+            </div>
+
+            <button type="submit" [disabled]="isLoading()" class="w-full bg-dark-blue hover:bg-dark-blue/90 text-white font-bold py-3 rounded-xl transition-all shadow-md disabled:opacity-50 mt-4">
+              {{ isLoading() ? 'Sending...' : 'Reset Password' }}
+            </button>
+            
+            <p class="text-center text-sm text-slate-600 mt-6">
+              Remembered your password? <button type="button" (click)="openAuth('login')" class="text-dark-blue font-bold hover:underline">Log in</button>
+            </p>
+          </form>
+        }
+
+        <!-- Signup Form -->
+        @if (authView() === 'signup') {
+          <form [formGroup]="signupForm" (ngSubmit)="onSignup()" class="space-y-4">
+            <h2 class="text-2xl font-bold text-dark-blue mb-6 text-center font-display">Create Account</h2>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="signup-firstname" class="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                <input id="signup-firstname" type="text" formControlName="firstName" class="w-full px-4 py-3 rounded-xl border border-silver focus:border-dark-blue focus:ring-2 focus:ring-dark-blue/20 outline-none transition-all bg-white text-dark-blue" placeholder="Enter your first name">
+                @if (validationErrors()['firstName'] || (signupForm.get('firstName')?.touched && signupForm.get('firstName')?.invalid)) {
+                  <p class="text-red-500 text-xs mt-1">{{ validationErrors()['firstName'] || 'First name is required' }}</p>
+                }
+              </div>
+              <div>
+                <label for="signup-lastname" class="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
+                <input id="signup-lastname" type="text" formControlName="lastName" class="w-full px-4 py-3 rounded-xl border border-silver focus:border-dark-blue focus:ring-2 focus:ring-dark-blue/20 outline-none transition-all bg-white text-dark-blue" placeholder="Enter your last name">
+                @if (validationErrors()['lastName'] || (signupForm.get('lastName')?.touched && signupForm.get('lastName')?.invalid)) {
+                  <p class="text-red-500 text-xs mt-1">{{ validationErrors()['lastName'] || 'Last name is required' }}</p>
+                }
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+              <div class="col-span-2">
+                <label for="signup-username" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                <input id="signup-username" type="text" formControlName="username" class="w-full px-4 py-3 rounded-xl border border-silver focus:border-dark-blue focus:ring-2 focus:ring-dark-blue/20 outline-none transition-all bg-white text-dark-blue" placeholder="Choose a username">
+                @if (validationErrors()['username'] || (signupForm.get('username')?.touched && signupForm.get('username')?.invalid)) {
+                  <p class="text-red-500 text-xs mt-1">{{ validationErrors()['username'] || 'Username must be between 3 and 50 characters' }}</p>
+                }
+              </div>
+              <div>
+                <label for="signup-age" class="block text-sm font-medium text-slate-700 mb-1">Age</label>
+                <input id="signup-age" type="number" formControlName="age" class="w-full px-4 py-3 rounded-xl border border-silver focus:border-dark-blue focus:ring-2 focus:ring-dark-blue/20 outline-none transition-all bg-white text-dark-blue" placeholder="Enter your age">
+                @if (validationErrors()['age'] || (signupForm.get('age')?.touched && signupForm.get('age')?.invalid)) {
+                  <p class="text-red-500 text-xs mt-1">{{ validationErrors()['age'] || 'Age must be at least 1' }}</p>
+                }
+              </div>
+            </div>
+            
+            <div>
+              <label for="signup-email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <input id="signup-email" type="email" formControlName="email" class="w-full px-4 py-3 rounded-xl border border-silver focus:border-dark-blue focus:ring-2 focus:ring-dark-blue/20 outline-none transition-all bg-white text-dark-blue" placeholder="Enter your email address">
+              @if (validationErrors()['email'] || (signupForm.get('email')?.touched && signupForm.get('email')?.invalid)) {
+                <p class="text-red-500 text-xs mt-1">{{ validationErrors()['email'] || 'Email format is invalid' }}</p>
+              }
+            </div>
+
+            <button type="submit" [disabled]="isLoading()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-md disabled:opacity-50 mt-4">
+              {{ isLoading() ? 'Creating Account...' : 'Sign Up' }}
+            </button>
+            
+            <p class="text-center text-sm text-slate-600 mt-6">
+              Already have an account? <button type="button" (click)="openAuth('login')" class="text-dark-blue font-bold hover:underline">Log in</button>
+            </p>
+          </form>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,718 @@
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+// ─────────────────────────────────────────────────────────────
+//  TYPES
+// ─────────────────────────────────────────────────────────────
+interface ObstacleType {
+  id: string;
+  emoji: string;
+  label: string;
+  doseUv: number;
+  color: string;
+  prob: number;
+  flashColor: string;
+}
+
+interface Obstacle {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  type: ObstacleType;
+  hit: boolean;
+  scored: boolean;
+  anim: number;
+}
+
+interface GameState {
+  running: boolean;
+  dead: boolean;
+  monkeyY: number;
+  velY: number;
+  onGround: boolean;
+  jumpsLeft: number;
+  frameIdx: number;
+  frameAccum: number;
+  isSick: boolean;
+  bgOffset: number;
+  obstacles: Obstacle[];
+  nextObstacleIn: number;
+  speed: number;
+  score: number;
+  distance: number;
+  obstaclesHit: number;
+  obstaclesJumped: number;
+  totalDose: number;
+  gaugePercent: number;
+  elapsed: number;
+  lastTS: number;
+  lastHitLabel: string;
+  events: Array<{ type: string; msg: string; id: number }>;
+  eventId: number;
+}
+
+interface GuideEntry {
+  emoji: string;
+  source: string;
+  dose: string;
+  doseValue: number;
+  description: string;
+  category: 'safe' | 'low' | 'medium' | 'high' | 'critical';
+}
+
+// ─────────────────────────────────────────────────────────────
+//  GAME CONFIG — tweak these to customise the game
+// ─────────────────────────────────────────────────────────────
+const CONFIG = {
+  CANVAS_W:        900,
+  CANVAS_H:        379,
+  TOTAL_FRAMES:    145,
+  FRAME_W:         256,   // source px per frame
+  ANIM_FPS:        24,
+  DISPLAY_H_HAPPY: 260,
+  DISPLAY_H_SICK:  210,
+  HAPPY_SRC_H:     462,
+  SICK_SRC_H:      379,
+  BG_TOTAL_W:      37120,
+  BG_SRC_H:        379,
+  MONKEY_X:        120,
+  GROUND_Y:        377,
+  GROUND_SINK_HAPPY: 18,
+  GROUND_SINK_SICK:  14,
+  GRAVITY:         2000,
+  JUMP_VY:        -740,
+  DOUBLE_JUMP_VY: -590,
+  BASE_SPEED:      300,
+  SPEED_INCR:      4,
+  MAX_SPEED:       720,
+  SICK_AT:         45,    // gauge % to switch to sick sprite
+  MAX_DOSE:        3000,  // µSv at which monkey dies
+  CHUNK_W:         14848, // width of each sprite chunk
+};
+
+// Asset paths — place sprite files in Angular assets/sprites/
+const ASSET_PATHS = {
+  HAPPY:  'assets/sprites/happy-monkey.png',
+  SICK:   'assets/sprites/sick-monkey.png',
+  BG:     'assets/sprites/background.jpg',
+};
+
+// ─────────────────────────────────────────────────────────────
+//  REAL-WORLD OBSTACLE TYPES
+// ─────────────────────────────────────────────────────────────
+const OBSTACLE_TYPES: ObstacleType[] = [
+  {
+    id: 'banana', emoji: '🍌', label: 'Banana',
+    doseUv: 0.1,  color: '#f9ca24', flashColor: 'rgba(249,202,36,0.45)', prob: 0.30,
+  },
+  {
+    id: 'smoke', emoji: '🚨', label: 'Smoke Detector',
+    doseUv: 0.09, color: '#e17055', flashColor: 'rgba(225,112,85,0.40)', prob: 0.25,
+  },
+  {
+    id: 'plane', emoji: '✈️', label: 'Flight (1 hr)',
+    doseUv: 3.0,  color: '#74b9ff', flashColor: 'rgba(116,185,255,0.40)', prob: 0.20,
+  },
+  {
+    id: 'dental', emoji: '🦷', label: 'Dental X-ray',
+    doseUv: 5.0,  color: '#a29bfe', flashColor: 'rgba(162,155,254,0.45)', prob: 0.13,
+  },
+  {
+    id: 'xray', emoji: '🏥', label: 'Chest X-ray',
+    doseUv: 100,  color: '#fd79a8', flashColor: 'rgba(253,121,168,0.45)', prob: 0.09,
+  },
+  {
+    id: 'ct', emoji: '⚡', label: 'CT Scan',
+    doseUv: 700,  color: '#e74c3c', flashColor: 'rgba(231,76,60,0.55)', prob: 0.03,
+  },
+];
+
+// ─────────────────────────────────────────────────────────────
+//  RADIATION GUIDE DATA
+// ─────────────────────────────────────────────────────────────
+const GUIDE_ENTRIES: GuideEntry[] = [
+  {
+    emoji: '🌍', source: 'Natural Background (annual)',
+    dose: '2,400 µSv/yr', doseValue: 2400,
+    description: 'We all receive ~2.4 mSv of natural background radiation every year — from cosmic rays, soil, radon gas and food. It varies hugely by location.',
+    category: 'safe',
+  },
+  {
+    emoji: '🍌', source: 'Eating a Banana',
+    dose: '0.1 µSv', doseValue: 0.1,
+    description: `Bananas contain potassium, a tiny fraction of which is radioactive K-40. One banana = ~0.1 µSv. You'd need to eat 35 million bananas to get a lethal dose.`,
+    category: 'safe',
+  },
+  {
+    emoji: '🚨', source: 'Smoke Detector (annual)',
+    dose: '0.09 µSv/yr', doseValue: 0.09,
+    description: 'Uses Americium-241 to ionise air and detect smoke. The dose to you living with one is less than eating a single banana per year. Alpha radiation cannot penetrate the casing.',
+    category: 'safe',
+  },
+  {
+    emoji: '✈️', source: 'Transatlantic Flight (10 hr)',
+    dose: '60 µSv', doseValue: 60,
+    description: 'At 35,000 ft the atmosphere is thinner, so cosmic rays get through more easily. A 10-hour flight gives ~60 µSv — about 3 weeks of ground-level background radiation.',
+    category: 'low',
+  },
+  {
+    emoji: '🦷', source: 'Dental X-ray (full set)',
+    dose: '5 µSv', doseValue: 5,
+    description: 'Modern digital dental X-rays are very low dose. A full set of bite-wing X-rays = ~5 µSv, equivalent to just a few hours of natural background radiation. Safe to do annually.',
+    category: 'safe',
+  },
+  {
+    emoji: '🏥', source: 'Chest X-ray',
+    dose: '100 µSv', doseValue: 100,
+    description: '~100 µSv — equivalent to about 10 days of background radiation. The diagnostic benefit almost always outweighs the tiny radiation risk. Modern machines are very well shielded.',
+    category: 'low',
+  },
+  {
+    emoji: '⚡', source: 'CT Scan (chest)',
+    dose: '7,000 µSv', doseValue: 7000,
+    description: 'The highest routine medical dose — equivalent to ~3 years of background radiation. The small increased cancer risk (~0.05%) is weighed against the diagnostic value. Not done casually.',
+    category: 'medium',
+  },
+  {
+    emoji: '👨‍🚀', source: 'ISS Astronaut (6 months)',
+    dose: '80,000 µSv', doseValue: 80000,
+    description: 'Outside Earth\'s magnetic shield, cosmic radiation is intense. Six months on the ISS gives ~80 mSv — roughly 33 years of ground-level background. A key challenge for Mars missions.',
+    category: 'high',
+  },
+  {
+    emoji: '💀', source: 'Acute Sickness Threshold',
+    dose: '1,000,000 µSv (1 Sv)', doseValue: 1000000,
+    description: 'Receiving 1 Sv in a short time causes radiation sickness (nausea, hair loss, immune damage). 4–5 Sv without treatment = ~50% mortality. 10+ Sv = near-certain death within days.',
+    category: 'critical',
+  },
+];
+
+// ─────────────────────────────────────────────────────────────
+//  ANGULAR COMPONENT
+// ─────────────────────────────────────────────────────────────
+@Component({
+  selector: 'app-radiation-runner',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: '../radiation-runner.component.html',
+  styleUrls: ['../radiation-runner.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class RadiationRunnerComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  @ViewChild('gameCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('flashEl',    { static: true }) flashRef!:  ElementRef<HTMLDivElement>;
+
+  // ── Public state (template-bound) ──────────────────────────
+  loadProgress  = 0;
+  loadMessage   = 'Initialising…';
+  isLoaded      = false;
+  screenState: 'loading' | 'start' | 'playing' | 'dead' = 'loading';
+
+  gaugePercent  = 0;
+  gaugeIcon     = '😊';
+  statusText    = '😊 Healthy — keep running!';
+  statusClass   = 'healthy';
+
+  scoreDisplay  = '0';
+  distDisplay   = '0 m';
+  hitDisplay    = '0';
+  events: Array<{ type: string; msg: string; id: number }> = [];
+
+  // Death screen stats
+  finalDist   = '0 m';
+  finalScore  = '0';
+  finalHit    = '0';
+  finalJumped = '0';
+  finalDose   = '0 µSv';
+  finalEquiv  = '0 chest X-rays';
+  lastHitLabel = '';
+
+  guideEntries  = GUIDE_ENTRIES;
+  obstacleTypes = OBSTACLE_TYPES;
+  activeFilter: 'all' | 'safe' | 'low' | 'medium' | 'high' | 'critical' = 'all';
+
+  // ── Private engine state ────────────────────────────────────
+  private ctx!:  CanvasRenderingContext2D;
+  private gs!:   GameState;
+  private rafId: number | null = null;
+
+  private sheetHappy!: OffscreenCanvas;
+  private sheetSick!:  OffscreenCanvas;
+  private sheetBg!:    OffscreenCanvas;
+
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private flashTimer: ReturnType<typeof setTimeout> | null = null;
+  private eventId = 0;
+
+  // Derived display constants
+  private readonly CW = CONFIG.CANVAS_W;
+  private readonly CH = CONFIG.CANVAS_H;
+  private readonly DISPLAY_W_HAPPY = Math.round(CONFIG.FRAME_W / CONFIG.HAPPY_SRC_H * CONFIG.DISPLAY_H_HAPPY);
+  private readonly DISPLAY_W_SICK  = Math.round(CONFIG.FRAME_W / CONFIG.SICK_SRC_H  * CONFIG.DISPLAY_H_SICK);
+
+  constructor(private cdr: ChangeDetectorRef) {}
+
+  ngOnInit() {}
+
+  ngAfterViewInit() {
+    const canvas = this.canvasRef.nativeElement;
+    this.ctx = canvas.getContext('2d')!;
+    this.ctx.imageSmoothingEnabled = false;
+    this.bindInput();
+    this.loadAllAssets();
+  }
+
+  ngOnDestroy() {
+    if (this.rafId !== null) cancelAnimationFrame(this.rafId);
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    if (this.flashTimer) clearTimeout(this.flashTimer);
+  }
+
+  // ── INPUT ───────────────────────────────────────────────────
+  private boundKeydown!: (e: KeyboardEvent) => void;
+  private bindInput() {
+    this.boundKeydown = (e: KeyboardEvent) => {
+      if (['Space', 'ArrowUp'].includes(e.code)) { e.preventDefault(); this.handleJump(); }
+    };
+    document.addEventListener('keydown', this.boundKeydown);
+  }
+
+  onCanvasPointer() { this.handleJump(); }
+
+  private handleJump() {
+    if (this.screenState === 'start') { this.startGame(); return; }
+    if (this.screenState === 'dead')  { this.restartGame(); return; }
+    if (!this.gs?.running || this.gs.dead) return;
+    if (this.gs.jumpsLeft > 0) {
+      this.gs.velY      = this.gs.onGround ? CONFIG.JUMP_VY : CONFIG.DOUBLE_JUMP_VY;
+      this.gs.onGround  = false;
+      this.gs.jumpsLeft--;
+      this.pushEvent('jump', '🦘 Jumped!');
+    }
+  }
+
+  // ── ASSET LOADING ───────────────────────────────────────────
+  private async loadAllAssets() {
+    this.setLoad(5, 'Loading background…');
+    this.sheetBg = await this.stitchSheet(
+      ASSET_PATHS.BG, CONFIG.BG_TOTAL_W, CONFIG.BG_SRC_H, false
+    );
+    this.setLoad(40, 'Loading happy monkey…');
+    this.sheetHappy = await this.stitchSheet(
+      ASSET_PATHS.HAPPY, CONFIG.BG_TOTAL_W, CONFIG.HAPPY_SRC_H, true
+    );
+    this.setLoad(80, 'Loading sick monkey…');
+    this.sheetSick = await this.stitchSheet(
+      ASSET_PATHS.SICK, CONFIG.BG_TOTAL_W, CONFIG.SICK_SRC_H, true
+    );
+    this.setLoad(100, 'Ready!');
+    await new Promise(r => setTimeout(r, 250));
+
+    this.isLoaded = true;
+    this.screenState = 'start';
+    this.drawStartFrame();
+    this.cdr.markForCheck();
+  }
+
+  private stitchSheet(src: string, w: number, h: number, _rgba: boolean): Promise<OffscreenCanvas> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const oc = new OffscreenCanvas(w, h);
+        const ctx = oc.getContext('2d')!;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 0, 0);
+        resolve(oc);
+      };
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  private setLoad(pct: number, msg: string) {
+    this.loadProgress = pct;
+    this.loadMessage  = msg;
+    this.cdr.markForCheck();
+  }
+
+  // ── GAME FLOW ───────────────────────────────────────────────
+  startGame() {
+    this.initState();
+    this.gs.running  = true;
+    this.gs.lastTS   = performance.now();
+    this.screenState = 'playing';
+    this.cdr.markForCheck();
+    this.rafId = requestAnimationFrame((ts) => this.loop(ts));
+  }
+
+  restartGame() {
+    this.events = [];
+    this.screenState = 'playing';
+    this.startGame();
+  }
+
+  private initState() {
+    this.gs = {
+      running: false, dead: false,
+      monkeyY: this.groundedY(false),
+      velY: 0, onGround: true, jumpsLeft: 2,
+      frameIdx: 0, frameAccum: 0, isSick: false,
+      bgOffset: 0,
+      obstacles: [], nextObstacleIn: 2.5,
+      speed: CONFIG.BASE_SPEED,
+      score: 0, distance: 0,
+      obstaclesHit: 0, obstaclesJumped: 0,
+      totalDose: 0, gaugePercent: 0,
+      elapsed: 0, lastTS: 0,
+      lastHitLabel: '',
+      events: [], eventId: 0,
+    };
+    this.gaugePercent = 0;
+    this.gaugeIcon    = '😊';
+    this.statusText   = '😊 Healthy — keep running!';
+    this.statusClass  = 'healthy';
+    this.scoreDisplay = '0';
+    this.distDisplay  = '0 m';
+    this.hitDisplay   = '0';
+    this.events       = [];
+  }
+
+  // ── LOOP ────────────────────────────────────────────────────
+  private loop(ts: number) {
+    const dt = Math.min((ts - this.gs.lastTS) / 1000, 0.05);
+    this.gs.lastTS = ts;
+    if (this.gs.running && !this.gs.dead) {
+      this.update(dt);
+      this.render();
+    }
+    this.rafId = requestAnimationFrame((t) => this.loop(t));
+  }
+
+  // ── UPDATE ──────────────────────────────────────────────────
+  private update(dt: number) {
+    const gs = this.gs;
+    gs.elapsed  += dt;
+    gs.distance += gs.speed * dt / 60;
+    gs.score    += Math.floor(gs.speed * dt / 10);
+    gs.speed     = Math.min(CONFIG.MAX_SPEED, CONFIG.BASE_SPEED + gs.elapsed * CONFIG.SPEED_INCR);
+
+    // Physics
+    if (!gs.onGround) { gs.velY += CONFIG.GRAVITY * dt; gs.monkeyY += gs.velY * dt; }
+    const floorY = this.groundedY(gs.isSick);
+    if (gs.monkeyY >= floorY) {
+      gs.monkeyY = floorY; gs.velY = 0; gs.onGround = true; gs.jumpsLeft = 2;
+    }
+
+    // Animation frame
+    gs.frameAccum += dt;
+    if (gs.frameAccum >= 1 / CONFIG.ANIM_FPS) {
+      gs.frameAccum -= 1 / CONFIG.ANIM_FPS;
+      gs.frameIdx = (gs.frameIdx + 1) % CONFIG.TOTAL_FRAMES;
+    }
+
+    // BG scroll
+    gs.bgOffset = (gs.bgOffset + gs.speed * dt) % CONFIG.BG_TOTAL_W;
+
+    // Spawn obstacles
+    gs.nextObstacleIn -= dt;
+    if (gs.nextObstacleIn <= 0) {
+      this.spawnObstacle();
+      const mg = Math.max(0.9, 2.5 - gs.elapsed * 0.007);
+      gs.nextObstacleIn = mg + Math.random() * 2.2;
+    }
+
+    // Hitbox (inner 50% of sprite)
+    const dH = gs.isSick ? CONFIG.DISPLAY_H_SICK  : CONFIG.DISPLAY_H_HAPPY;
+    const dW = gs.isSick ? this.DISPLAY_W_SICK    : this.DISPLAY_W_HAPPY;
+    const mL = CONFIG.MONKEY_X + dW * 0.22;
+    const mR = CONFIG.MONKEY_X + dW * 0.72;
+    const mT = gs.monkeyY + dH * 0.20;
+    const mB = gs.monkeyY + dH * 0.90;
+
+    for (let i = gs.obstacles.length - 1; i >= 0; i--) {
+      const o = gs.obstacles[i];
+      if (o.hit) { o.anim -= dt; if (o.anim <= 0) gs.obstacles.splice(i, 1); continue; }
+      o.x -= gs.speed * dt;
+
+      if (!o.scored) {
+        if (mR > o.x + 5 && mL < o.x + o.w - 5 && mB > o.y + 6 && mT < o.y + o.h) {
+          // HIT
+          o.hit = true; o.anim = 0.9; o.scored = true;
+          gs.obstaclesHit++;
+          this.addRadiation(o.type);
+          this.flashScreen(o.type.flashColor);
+          this.pushEvent('hit', `☢ ${o.type.label} +${this.fmtDose(o.type.doseUv)}`);
+        } else if (o.x + o.w < mL - 5) {
+          o.scored = true;
+          gs.obstaclesJumped++;
+          gs.score += 50;
+          this.pushEvent('jump', `✅ Dodged ${o.type.emoji} +50pts`);
+          this.flashScreen('rgba(0,184,148,0.28)');
+        }
+      }
+      if (o.x < -o.w - 20) gs.obstacles.splice(i, 1);
+    }
+
+    gs.isSick = gs.gaugePercent >= CONFIG.SICK_AT;
+
+    // Update template-bound values (throttled to avoid excessive CD)
+    if (Math.floor(gs.elapsed * 10) % 2 === 0) this.syncHUD();
+    if (gs.gaugePercent >= 100) this.triggerDeath();
+  }
+
+  // ── SPAWN ───────────────────────────────────────────────────
+  private spawnObstacle() {
+    const type = this.pickObstacleType();
+    // Obstacles go at different heights based on type
+    let y = CONFIG.GROUND_Y - 54;
+    if (type.id === 'plane') y = CONFIG.GROUND_Y - 90;  // flights are a bit higher
+    const w = type.id === 'plane' ? 60 : 54;
+    const h = type.id === 'plane' ? 48 : 54;
+    this.gs.obstacles.push({ x: this.CW + 40, y, w, h, type, hit: false, scored: false, anim: 0 });
+    this.pushEvent('spawn', `${type.emoji} ${type.label} incoming!`);
+  }
+
+  private pickObstacleType(): ObstacleType {
+    let r = Math.random();
+    for (const t of OBSTACLE_TYPES) {
+      r -= t.prob;
+      if (r <= 0) return t;
+    }
+    return OBSTACLE_TYPES[0];
+  }
+
+  // ── RADIATION ───────────────────────────────────────────────
+  private addRadiation(type: ObstacleType) {
+    this.gs.totalDose    = Math.min(CONFIG.MAX_DOSE, this.gs.totalDose + type.doseUv);
+    this.gs.gaugePercent = (this.gs.totalDose / CONFIG.MAX_DOSE) * 100;
+    this.gs.lastHitLabel = type.label;
+  }
+
+  private fmtDose(uv: number): string {
+    if (uv < 1)     return uv.toFixed(2) + ' µSv';
+    if (uv < 1000)  return uv.toFixed(1) + ' µSv';
+    if (uv < 1e6)   return (uv / 1000).toFixed(2) + ' mSv';
+    return (uv / 1e6).toFixed(3) + ' Sv';
+  }
+
+  // ── RENDER ──────────────────────────────────────────────────
+  private render() {
+    const ctx = this.ctx;
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, this.CW, this.CH);
+    this.renderBG();
+
+    if (this.gs.gaugePercent > 40) {
+      ctx.save();
+      ctx.globalAlpha = ((this.gs.gaugePercent - 40) / 60) * 0.28;
+      ctx.fillStyle = '#e74c3c';
+      ctx.fillRect(0, 0, this.CW, this.CH);
+      ctx.restore();
+    }
+
+    for (const o of this.gs.obstacles) this.renderObstacle(o);
+    this.renderMonkey();
+
+    // Speed strip
+    const spd = (this.gs.speed - CONFIG.BASE_SPEED) / (CONFIG.MAX_SPEED - CONFIG.BASE_SPEED);
+    ctx.fillStyle = `rgba(162,155,254,${0.12 + spd * 0.3})`;
+    ctx.fillRect(this.CW - 8, this.CH - Math.floor(spd * this.CH), 6, Math.floor(spd * this.CH));
+  }
+
+  private renderBG() {
+    if (!this.sheetBg) return;
+    const ctx = this.ctx;
+    ctx.imageSmoothingEnabled = false;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, this.CW, this.CH); ctx.clip();
+    let drawX = 0;
+    let srcX  = Math.floor(this.gs.bgOffset) % CONFIG.BG_TOTAL_W;
+    while (drawX < this.CW) {
+      const avail = CONFIG.BG_TOTAL_W - srcX;
+      const chunk = Math.min(avail, this.CW - drawX);
+      ctx.drawImage(this.sheetBg, srcX, 0, chunk, CONFIG.BG_SRC_H, drawX, 0, chunk, this.CH);
+      drawX += chunk; srcX = 0;
+      if (drawX >= this.CW) break;
+    }
+    ctx.restore();
+  }
+
+  private renderMonkey() {
+    const gs    = this.gs;
+    const sheet = gs.isSick ? this.sheetSick : this.sheetHappy;
+    if (!sheet) return;
+    const srcH  = gs.isSick ? CONFIG.SICK_SRC_H  : CONFIG.HAPPY_SRC_H;
+    const dH    = gs.isSick ? CONFIG.DISPLAY_H_SICK  : CONFIG.DISPLAY_H_HAPPY;
+    const dW    = gs.isSick ? this.DISPLAY_W_SICK    : this.DISPLAY_W_HAPPY;
+    const sx    = gs.frameIdx * CONFIG.FRAME_W;
+    const ctx   = this.ctx;
+
+    // Shadow
+    if (gs.onGround) {
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(CONFIG.MONKEY_X + dW / 2, CONFIG.GROUND_Y + 5, dW * 0.38, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    if (!gs.onGround) {
+      ctx.translate(CONFIG.MONKEY_X + dW / 2, gs.monkeyY + dH / 2);
+      ctx.scale(0.93, 1.07);
+      ctx.translate(-(CONFIG.MONKEY_X + dW / 2), -(gs.monkeyY + dH / 2));
+    }
+    ctx.drawImage(sheet, sx, 0, CONFIG.FRAME_W, srcH, CONFIG.MONKEY_X, gs.monkeyY, dW, dH);
+    ctx.restore();
+  }
+
+  private renderObstacle(o: Obstacle) {
+    const ctx = this.ctx;
+    ctx.save();
+
+    if (o.hit) {
+      const p = 1 - o.anim / 0.9;
+      ctx.globalAlpha = 1 - p;
+      ctx.translate(o.x + o.w / 2, o.y + o.h / 2);
+      ctx.rotate(p * Math.PI * 2.2);
+      ctx.scale(1 + p * 1.8, 1 + p * 1.8);
+      ctx.font = `${o.w}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(o.type.emoji, 0, 0);
+      // Radiation burst
+      ctx.globalAlpha = (1 - p) * 0.7;
+      ctx.strokeStyle = o.type.color; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(a) * (18 + p * 30), Math.sin(a) * (18 + p * 30));
+      }
+      ctx.stroke();
+      ctx.globalAlpha = (1 - p) * 0.9; ctx.fillStyle = '#e74c3c';
+      ctx.font = `${10 + p * 16}px serif`; ctx.fillText('☢', 0, -(12 + p * 20));
+    } else {
+      // Glow
+      const pulse = Math.sin(Date.now() / 280) * 0.5 + 0.5;
+      ctx.shadowColor = o.type.color;
+      ctx.shadowBlur  = 4 + pulse * 10;
+      ctx.font = `${o.w}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(o.type.emoji, o.x + o.w / 2, o.y + o.h + 2);
+
+      // Warning label + arrow when close
+      const dist = o.x - (CONFIG.MONKEY_X + (this.gs.isSick ? this.DISPLAY_W_SICK : this.DISPLAY_W_HAPPY));
+      if (dist < 200 && dist > -20) {
+        ctx.shadowBlur = 0;
+        const alpha = Math.max(0, 1 - dist / 200);
+        ctx.save();
+        ctx.globalAlpha = alpha * 0.9;
+        // Mini label
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillStyle = o.type.color;
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(o.type.label, o.x + o.w / 2, o.y - 4);
+        ctx.font = '13px serif'; ctx.fillStyle = '#fff';
+        ctx.fillText('⚠', o.x + o.w / 2, o.y - 16);
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+  }
+
+  // ── HUD SYNC ────────────────────────────────────────────────
+  private syncHUD() {
+    const p = this.gs.gaugePercent;
+    this.gaugePercent = p;
+    this.scoreDisplay = this.gs.score.toLocaleString();
+    this.distDisplay  = Math.floor(this.gs.distance) + ' m';
+    this.hitDisplay   = String(this.gs.obstaclesHit);
+    this.lastHitLabel = this.gs.lastHitLabel;
+
+    if      (p < 25) { this.gaugeIcon = '😊'; this.statusText = '😊 Healthy — keep running!';    this.statusClass = 'healthy';  }
+    else if (p < 50) { this.gaugeIcon = '😵'; this.statusText = '😵 Feeling confused…';           this.statusClass = 'confused'; }
+    else if (p < 80) { this.gaugeIcon = '🤢'; this.statusText = '🤢 Radiation sickness!';         this.statusClass = 'sick';     }
+    else             { this.gaugeIcon = '☠';  this.statusText = '☠ Critical — almost dead!';     this.statusClass = 'critical'; }
+
+    this.cdr.markForCheck();
+  }
+
+  // ── DEATH ───────────────────────────────────────────────────
+  private triggerDeath() {
+    this.gs.dead = this.gs.running = false;
+    if (this.rafId !== null) { cancelAnimationFrame(this.rafId); this.rafId = null; }
+
+    this.finalDist   = Math.floor(this.gs.distance) + ' m';
+    this.finalScore  = this.gs.score.toLocaleString();
+    this.finalHit    = String(this.gs.obstaclesHit);
+    this.finalJumped = String(this.gs.obstaclesJumped);
+    this.finalDose   = this.fmtDose(this.gs.totalDose);
+    this.finalEquiv  = Math.round(this.gs.totalDose / 100) + ' chest X-rays';
+
+    this.screenState = 'dead';
+    this.flashScreen('rgba(214,48,49,0.55)');
+    this.cdr.markForCheck();
+  }
+
+  // ── START FRAME ─────────────────────────────────────────────
+  private drawStartFrame() {
+    if (!this.sheetHappy || !this.sheetBg) return;
+    const ctx = this.ctx;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(this.sheetBg, 0, 0, this.CW, CONFIG.BG_SRC_H, 0, 0, this.CW, this.CH);
+    const dH = CONFIG.DISPLAY_H_HAPPY, dW = this.DISPLAY_W_HAPPY;
+    ctx.drawImage(
+      this.sheetHappy, 0, 0, CONFIG.FRAME_W, CONFIG.HAPPY_SRC_H,
+      CONFIG.MONKEY_X, this.groundedY(false), dW, dH
+    );
+  }
+
+  // ── HELPERS ─────────────────────────────────────────────────
+  private groundedY(sick: boolean): number {
+    if (sick) return CONFIG.GROUND_Y - CONFIG.DISPLAY_H_SICK  + CONFIG.GROUND_SINK_SICK;
+    return         CONFIG.GROUND_Y - CONFIG.DISPLAY_H_HAPPY + CONFIG.GROUND_SINK_HAPPY;
+  }
+
+  private flashScreen(color: string) {
+    const el = this.flashRef.nativeElement;
+    el.style.background = color; el.style.opacity = '1';
+    if (this.flashTimer) clearTimeout(this.flashTimer);
+    this.flashTimer = setTimeout(() => { el.style.opacity = '0'; }, 160);
+  }
+
+  private pushEvent(type: string, msg: string) {
+    this.events = [{ type, msg, id: this.eventId++ }, ...this.events].slice(0, 4);
+    this.cdr.markForCheck();
+  }
+
+  // ── GUIDE FILTER ────────────────────────────────────────────
+  setFilter(f: typeof this.activeFilter) { this.activeFilter = f; }
+
+  get filteredGuide(): GuideEntry[] {
+    if (this.activeFilter === 'all') return GUIDE_ENTRIES;
+    return GUIDE_ENTRIES.filter(e => e.category === this.activeFilter);
+  }
+
+  getDoseBarWidth(doseValue: number): string {
+    // Log scale from 0.01 to 1,000,000
+    const pct = Math.min(100, (Math.log10(doseValue + 0.01) / Math.log10(1000001)) * 100);
+    return pct.toFixed(1) + '%';
+  }
+
+  trackEvent(_: number, ev: { id: number }): number { return ev.id; }
+}
+
+// ── trackBy for ngFor ────────────────────────────────────────
+/* Add this inside the class body */

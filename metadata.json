@@ -1,0 +1,5 @@
+{
+  "name": "NucLA Dashboard",
+  "description": "A nuclear learning app dashboard with a 3D particle collision simulator.",
+  "requestFramePermissions": []
+}

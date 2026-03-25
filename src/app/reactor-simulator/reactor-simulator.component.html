@@ -1,0 +1,230 @@
+<!-- ============================================================
+     reactor-simulator.component.html
+     Full Angular template — zero jQuery/DOM manipulation.
+     All state flows through the ReactorState binding.
+     ============================================================ -->
+<div class="smr-host">
+
+  <!-- ── MAIN GRID ──────────────────────────────────────────── -->
+  <div class="main-content">
+
+    <!-- CANVAS PANEL -->
+    <div class="reactor-panel" #reactorPanel>
+      <canvas #reactorCanvas></canvas>
+    </div>
+
+    <!-- CONTROL PANEL -->
+    <aside class="control-panel">
+
+      <!-- ── POWER DISPLAY ──────────────────────────────────── -->
+      <div class="cp-section cp-section--dark">
+        <div class="power-display">
+          <div>
+            <div class="power-row">
+              <span class="power-value">{{ state ? (state.powerOutput | number:'1.0-0') : '0' }}</span>
+              <span class="power-unit">MWe</span>
+            </div>
+            <div class="power-label">ELECTRICAL OUTPUT</div>
+          </div>
+          <div class="power-right">
+            <div class="efficiency-val">{{ efficiency }}%</div>
+            <div class="efficiency-label">EFFICIENCY</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REACTOR CONTROLS ───────────────────────────────── -->
+      <div class="cp-section">
+        <div class="cp-title">⚙ Reactor Controls</div>
+
+        <!-- Control Rods -->
+        <div class="slider-row">
+          <div class="slider-header">
+            <span class="slider-name">⬛ Boron Control Rods</span>
+            <span class="slider-val">{{ rodLabel }}</span>
+          </div>
+          <input
+            type="range" class="rod-slider"
+            min="0" max="100" step="1"
+            [value]="rodValue"
+            (input)="onRodChange(+$any($event.target).value)"
+          />
+          <div class="slider-ticks">
+            <span>Withdrawn (0%)</span>
+            <span>50%</span>
+            <span>Full IN (100%)</span>
+          </div>
+        </div>
+
+        <!-- Pump Speed -->
+        <div class="slider-row">
+          <div class="slider-header">
+            <span class="slider-name">💧 Coolant Pump Speed</span>
+            <span class="slider-val">{{ pumpValue }}%</span>
+          </div>
+          <input
+            type="range" class="pump-slider"
+            min="0" max="100" step="1"
+            [value]="pumpValue"
+            (input)="onPumpChange(+$any($event.target).value)"
+          />
+          <div class="slider-ticks">
+            <span>Off (0%)</span>
+            <span>50%</span>
+            <span>Max (100%)</span>
+          </div>
+        </div>
+
+        <!-- Turbine Toggle -->
+        <div class="toggle-row">
+          <span class="toggle-label">🔌 Connect Turbine / Generator</span>
+          <label class="toggle">
+            <input
+              type="checkbox"
+              [checked]="turbineOn"
+              (change)="onTurbineChange($any($event.target).checked)"
+            />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="btn-row">
+          <button class="btn btn-startup" (click)="onStartup()">▶ Startup Sequence</button>
+          <button class="btn btn-reset"   (click)="onReset()">↺ Reset</button>
+        </div>
+        <button class="btn btn-scram" (click)="onScram()">🔴 EMERGENCY SCRAM</button>
+      </div>
+
+      <!-- ── CORE STATUS ─────────────────────────────────────── -->
+      <div class="cp-section">
+        <div class="cp-title">📊 Core Status</div>
+
+        <div class="gauge-row">
+          <span class="gauge-label">Neutron Flux</span>
+          <div class="gauge-track">
+            <div class="gauge-fill gauge-flux" [style.width.%]="gaugeFluxPct"></div>
+          </div>
+          <span class="gauge-val">{{ state ? (state.neutronFlux | number:'1.0-0') : '0' }}%</span>
+        </div>
+
+        <div class="gauge-row">
+          <span class="gauge-label">Core Temp</span>
+          <div class="gauge-track">
+            <div class="gauge-fill gauge-temp" [style.width.%]="gaugeTempPct"></div>
+          </div>
+          <span class="gauge-val">{{ state ? (state.coreTemp | number:'1.0-0') : '285' }}°C</span>
+        </div>
+
+        <div class="gauge-row">
+          <span class="gauge-label">Xenon-135</span>
+          <div class="gauge-track">
+            <div class="gauge-fill gauge-xenon" [style.width.%]="gaugeXenonPct"></div>
+          </div>
+          <span class="gauge-val">{{ state ? (state.xenonLevel | number:'1.0-0') : '0' }}%</span>
+        </div>
+
+        <div class="gauge-row">
+          <span class="gauge-label">Steam Pressure</span>
+          <div class="gauge-track">
+            <div class="gauge-fill gauge-steam" [style.width.%]="gaugeSteamPct"></div>
+          </div>
+          <span class="gauge-val">{{ state ? (state.steamPressure | number:'1.0-0') : '0' }} b</span>
+        </div>
+
+        <div class="gauge-row">
+          <span class="gauge-label">⚠ Meltdown Risk</span>
+          <div class="gauge-track">
+            <div class="gauge-fill gauge-risk" [style.width.%]="gaugeRiskPct"></div>
+          </div>
+          <span class="gauge-val gauge-val--danger">{{ state ? (state.meltdownRisk | number:'1.0-0') : '0' }}%</span>
+        </div>
+
+        <!-- Readout grid -->
+        <div class="readout-grid">
+          <div class="readout-cell">
+            <div class="r-val">{{ state ? (state.coreTemp | number:'1.0-0') : '285' }}</div>
+            <div class="r-unit">°C</div>
+            <div class="r-label">Core Temperature</div>
+          </div>
+          <div class="readout-cell">
+            <div class="r-val">{{ state ? (state.steamPressure | number:'1.0-0') : '0' }}</div>
+            <div class="r-unit">bar</div>
+            <div class="r-label">Steam Pressure</div>
+          </div>
+          <div class="readout-cell">
+            <div class="r-val">{{ pumpValue }}</div>
+            <div class="r-unit">%</div>
+            <div class="r-label">Coolant Flow</div>
+          </div>
+          <div class="readout-cell">
+            <div class="r-val">{{ state ? (state.xenonLevel | number:'1.1-1') : '0.0' }}</div>
+            <div class="r-unit">%</div>
+            <div class="r-label">Xe-135 Level</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── WARNINGS ───────────────────────────────────────── -->
+      <div class="cp-section">
+        <div class="xenon-warning" [class.visible]="showXenonWarning">
+          <strong>⚠ XENON DEAD ZONE</strong>
+          Xenon-135 is absorbing all available neutrons. The reactor cannot restart for several
+          simulated hours until Xe-135 decays naturally. This is the physics of why reactors
+          shut down rather than explode.
+        </div>
+
+        <div class="temp-warning" [class.visible]="showTempWarning">
+          <strong>🔥 HIGH TEMPERATURE WARNING</strong>
+          Core temperature is approaching dangerous levels. Increase coolant flow or insert
+          control rods immediately.
+        </div>
+
+        <div class="info-card" *ngIf="showNegTempInfo">
+          <b>Negative Temperature Coefficient:</b> Water at higher temperatures is less dense
+          and moderates neutrons less effectively, naturally slowing the reaction — a built-in
+          safety mechanism.
+        </div>
+      </div>
+
+      <!-- ── EVENT LOG ──────────────────────────────────────── -->
+      <div class="cp-section">
+        <div class="cp-title">📋 Event Log</div>
+        <div class="event-log">
+          <ng-container *ngIf="state ? state.events.length : 0; else initLog">
+            <div
+              class="log-entry"
+              *ngFor="let ev of state.events; trackBy: trackLogById"
+            >
+              <span class="log-time">{{ ev.time }}</span>
+              <span class="log-type" [ngClass]="ev.type">{{ ev.type }}</span>
+              <span class="log-msg">{{ ev.msg }}</span>
+            </div>
+          </ng-container>
+          <ng-template #initLog>
+            <div class="log-entry">
+              <span class="log-time">00:00:00</span>
+              <span class="log-type SYS">SYS</span>
+              <span class="log-msg">Simulator initialized. Reactor in SHUTDOWN state.</span>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- ── LEGEND ─────────────────────────────────────────── -->
+      <div class="cp-section">
+        <div class="cp-title">🗺 Visual Legend</div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#2980b9"></div>Coolant Water</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#a8d4f5"></div>Steam</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div>Neutrons</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#64748b"></div>Graphite</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#1a252f"></div>Control Rods</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div>Hot Fuel</div>
+        </div>
+      </div>
+
+    </aside><!-- /control-panel -->
+  </div><!-- /main-content -->
+</div><!-- /smr-host -->
+

@@ -1,0 +1,78 @@
+<div class="leaderboard-container">
+  <div class="lb-header">
+    <div class="lb-title">
+      <mat-icon class="title-icon">emoji_events</mat-icon>
+      <h1>Global Leaderboard</h1>
+    </div>
+    <p class="lb-subtitle">Top scientists ranked by highest score.</p>
+  </div>
+
+  <ng-container *ngIf="leaderboard$ | async as state">
+    
+    <!-- Loading State -->
+    <div *ngIf="!state.data && !state.error" class="lb-loading">
+      <div class="spinner"></div>
+      <p>Loading rankings...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="state.error" class="lb-error">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ state.error }}</p>
+    </div>
+
+    <!-- Data State -->
+    <div *ngIf="state.data" class="lb-content">
+      
+      <!-- Empty State -->
+      <div *ngIf="state.data.length === 0" class="lb-empty">
+        <mat-icon>stars</mat-icon>
+        <p>No scores recorded yet. Be the first to play!</p>
+      </div>
+
+      <!-- List View -->
+      <div *ngIf="state.data.length > 0" class="lb-list">
+        
+        <!-- List Header -->
+        <div class="list-head pr-2">
+          <div class="col-rank">Rank</div>
+          <div class="col-user">Scientist</div>
+          <div class="col-score">Highest Score</div>
+          <div class="col-attempts">Attempts</div>
+        </div>
+
+        <!-- List Items -->
+        <div class="list-body">
+          <div *ngFor="let entry of state.data" 
+               class="list-row" 
+               [ngClass]="getRankClass(entry.rank)">
+            
+            <div class="col-rank">
+              <div class="rank-badge" [style.color]="getMedalColor(entry.rank)">
+                <span *ngIf="entry.rank > 3" class="rank-num">{{ entry.rank }}</span>
+                <mat-icon *ngIf="entry.rank <= 3" class="rank-medal">workspace_premium</mat-icon>
+              </div>
+            </div>
+            
+            <div class="col-user">
+              <div class="user-avatar">
+                {{ entry.username.charAt(0).toUpperCase() }}
+              </div>
+              <span class="user-name">{{ entry.username }}</span>
+            </div>
+            
+            <div class="col-score">
+              <span class="score-val">{{ entry.highestScore | number }}</span>
+              <span class="score-unit">pts</span>
+            </div>
+            
+            <div class="col-attempts">
+              <span class="attempts-val">{{ entry.attempts }}</span>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </ng-container>
+</div>

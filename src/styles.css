@@ -1,69 +1,75 @@
 /* You can add global styles to this file, and also import other style files */
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-surface-tint: #0056d2;
-  --color-on-secondary-container: #006f69;
-  --color-secondary-container: #76f3ea;
-  --color-on-error-container: #93000a;
-  --color-on-background: #191c1e;
-  --color-on-surface: #191c1e;
-  --color-tertiary-fixed-dim: #fabd00;
-  --color-inverse-surface: #2d3133;
-  --color-surface-container-lowest: #ffffff;
-  --color-on-primary-fixed-variant: #0040a1;
-  --color-outline: #737785;
-  --color-primary-fixed: #dae2ff;
-  --color-inverse-primary: #b2c5ff;
-  --color-tertiary-container: #795a00;
-  --color-secondary: #006a65;
-  --color-error-container: #ffdad6;
-  --color-tertiary: #5c4300;
-  --color-primary-container: #0056d2;
-  --color-surface-container-low: #f2f4f6;
-  --color-on-secondary-fixed: #00201e;
-  --color-on-secondary: #ffffff;
-  --color-secondary-fixed-dim: #59dad1;
-  --color-on-tertiary: #ffffff;
-  --color-on-primary: #ffffff;
-  --color-secondary-fixed: #79f6ed;
-  --color-outline-variant: #c3c6d6;
-  --color-on-error: #ffffff;
-  --color-surface-bright: #f7f9fb;
-  --color-on-surface-variant: #424654;
-  --color-error: #ba1a1a;
-  --color-primary: #0040a1;
-  --color-on-tertiary-fixed: #261a00;
-  --color-on-tertiary-fixed-variant: #5b4300;
-  --color-surface-container: #eceef0;
-  --color-background: #f7f9fb;
-  --color-tertiary-fixed: #ffdf9e;
-  --color-surface-container-high: #e6e8ea;
-  --color-primary-fixed-dim: #b2c5ff;
-  --color-surface-dim: #d8dadc;
-  --color-on-secondary-fixed-variant: #00504c;
-  --color-surface-variant: #e0e3e5;
-  --color-on-primary-container: #ccd8ff;
-  --color-surface-container-highest: #e0e3e5;
-  --color-inverse-on-surface: #eff1f3;
-  --color-surface: #f7f9fb;
-  --color-on-tertiary-container: #ffd476;
-  --color-on-primary-fixed: #001847;
+  --color-on-secondary-fixed-variant: #364860;
+  --color-surface-variant: #2c3543;
+  --color-surface-container-low: #131c29;
+  --color-tertiary-fixed: #79f5fb;
+  --color-surface-container: #17202d;
+  --color-secondary-fixed-dim: #b5c8e5;
+  --color-on-surface-variant: #bbc9cf;
+  --color-surface-container-high: #222a38;
+  --color-primary-fixed: #b4ebff;
+  --color-on-background: #dae3f5;
+  --color-on-primary-fixed: #001f27;
+  --color-on-error-container: #ffdad6;
+  --color-tertiary: #74f1f7;
+  --color-primary-fixed-dim: #3cd7ff;
+  --color-outline: #859398;
+  --color-on-secondary-fixed: #081c32;
+  --color-inverse-surface: #dae3f5;
+  --color-tertiary-container: #53d4da;
+  --color-surface-dim: #0b1420;
+  --color-surface: #0b1420;
+  --color-surface-bright: #313a48;
+  --color-inverse-on-surface: #28313f;
+  --color-primary: #a8e8ff;
+  --color-on-error: #690005;
+  --color-on-tertiary-fixed: #002021;
+  --color-on-secondary-container: #a4b6d3;
+  --color-on-tertiary-container: #00595c;
+  --color-background: #0b1420;
+  --color-on-tertiary-fixed-variant: #004f52;
+  --color-error-container: #93000a;
+  --color-secondary-fixed: #d2e4ff;
+  --color-surface-tint: #3cd7ff;
+  --color-surface-container-lowest: #060f1b;
+  --color-inverse-primary: #00677e;
+  --color-on-surface: #dae3f5;
+  --color-on-primary: #003642;
+  --color-secondary: #b5c8e5;
+  --color-on-tertiary: #003739;
+  --color-outline-variant: #3c494e;
+  --color-tertiary-fixed-dim: #59d8de;
+  --color-on-primary-fixed-variant: #004e5f;
+  --color-on-secondary: #1f3148;
+  --color-error: #ffb4ab;
+  --color-secondary-container: #364860;
+  --color-primary-container: #00d4ff;
+  --color-surface-container-highest: #2c3543;
+  --color-on-primary-container: #00586b;
 
-  --font-headline: "Plus Jakarta Sans", sans-serif;
-  --font-body: "Inter", sans-serif;
-  --font-label: "Inter", sans-serif;
+  --font-headline: "Space Grotesk", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Space Grotesk", sans-serif;
 }
 
 @layer utilities {
   .particle-bg {
-    background-image: radial-gradient(circle, #0040a1 1px, transparent 1px);
+    background-image: radial-gradient(circle at 2px 2px, rgba(168, 232, 255, 0.05) 1px, transparent 0);
     background-size: 40px 40px;
-    opacity: 0.05;
   }
-}
-@layer utilities {
+  .glow-primary:hover {
+    box-shadow: 0 0 20px rgba(168, 232, 255, 0.2);
+  }
+  .glass-panel {
+    background: rgba(19, 28, 41, 0.6);
+    backdrop-filter: blur(20px);
+  }
   .animate-fade-in {
     animation: fadeIn 0.5s ease-in-out;
   }

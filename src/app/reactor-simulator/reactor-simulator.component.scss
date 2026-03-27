@@ -725,3 +725,170 @@ input[type='range'] {
   }
 }
 
+
+// ══ v2: SCRAM override badge ════════════════════════════
+.scram-override {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
+  color: #e74c3c;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  animation: pulse-red 0.6s ease-in-out infinite alternate;
+}
+
+.em-override {
+  margin-left: 4px;
+  font-size: 9px;
+  color: #e67e22;
+  font-style: italic;
+}
+
+// ══ v2: Emergency section ════════════════════════════════
+.cp-section--emergency {
+  border-left: 3px solid #c0392b;
+  background: rgba(192, 57, 43, 0.04);
+}
+
+// Active emergency banner
+.em-banner {
+  background: linear-gradient(135deg, #fdf2f2, #fce4e4);
+  border: 1px solid #e74c3c;
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.em-banner-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.em-banner-icon {
+  font-size: 16px;
+  animation: pulse-icon 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-icon {
+  from { opacity: 1; }
+  to   { opacity: 0.4; }
+}
+
+.em-banner-text {
+  flex: 1;
+  font-weight: 700;
+  font-size: 11px;
+  color: #922b21;
+  letter-spacing: 0.06em;
+}
+
+.btn-em-clear {
+  background: transparent;
+  border: 1px solid #e74c3c;
+  border-radius: var(--r-sm);
+  color: #e74c3c;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 7px;
+  transition: all 0.15s;
+  &:hover { background: rgba(231,76,60,0.1); }
+}
+
+.em-response {
+  margin-top: 4px;
+}
+
+.em-explain {
+  font-size: 10px;
+  color: #7b241c;
+  line-height: 1.55;
+  margin-bottom: 8px;
+  b { color: #922b21; }
+}
+
+.btn-response {
+  width: 100%;
+  padding: 9px;
+  border: none;
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, #1a8a3a, #117a32);
+  color: white;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover:not(:disabled) { filter: brightness(1.15); }
+  &:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+// Trigger cards (shown when no emergency active)
+.em-triggers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.em-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 8px 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.07);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(192,57,43,0.18);
+  }
+  &:active { transform: scale(0.96); }
+}
+
+.em-card-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.em-card-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+}
+
+.em-card-sub {
+  font-size: 8.5px;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+// Log type for EMERGENCY
+.log-type.EMERGENCY {
+  color: #ff4444;
+  font-weight: bold;
+  animation: pulse-icon 0.4s ease-in-out infinite alternate;
+}
+
+// Extra responsive tweak for emergency grid on small screens
+@media (max-width: 400px) {
+  .em-triggers { grid-template-columns: 1fr 1fr; }
+  .em-card:last-child { grid-column: 1 / -1; }
+}

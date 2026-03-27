@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuclear Science Articles — Mahamaya Girls' College Research Unit</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0a0c10;
+    --bg-card: #0f1318;
+    --bg-mid: #131820;
+    --accent-gold: #d4a843;
+    --accent-amber: #e8b84b;
+    --accent-glow: rgba(212, 168, 67, 0.15);
+    --accent-blue: #4fc3f7;
+    --text-primary: #e8e4dc;
+    --text-muted: #8a8680;
+    --text-subtle: #5a5754;
+    --border: rgba(212, 168, 67, 0.2);
+    --border-subtle: rgba(255,255,255,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    position: relative;
+    padding: 100px 40px 80px;
+    text-align: center;
+    overflow: hidden;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,168,67,0.08) 0%, transparent 70%);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(circle 1px at 15% 30%, rgba(212,168,67,0.4) 0%, transparent 0%) 0 0 / 60px 60px,
+      radial-gradient(circle 1px at 85% 70%, rgba(212,168,67,0.2) 0%, transparent 0%) 30px 30px / 60px 60px;
+    opacity: 0.5;
+  }
+
+  .atom-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    pointer-events: none;
+    opacity: 0.04;
+  }
+
+  .atom-ring::before,
+  .atom-ring::after,
+  .hero-rings {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid var(--accent-gold);
+  }
+  .atom-ring::before { transform: scaleX(0.4) rotate(30deg); }
+  .atom-ring::after  { transform: scaleX(0.4) rotate(-30deg); }
+
+  .competition-tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    border: 1px solid var(--border);
+    padding: 6px 18px;
+    border-radius: 2px;
+    margin-bottom: 28px;
+    background: rgba(212,168,67,0.05);
+    position: relative;
+  }
+
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.6rem, 5vw, 4.4rem);
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--text-primary);
+    position: relative;
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+  }
+
+  .hero h1 span {
+    color: var(--accent-gold);
+    font-style: italic;
+  }
+
+  .hero-sub {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    position: relative;
+  }
+
+  /* ─── NAV ─── */
+  .article-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 12, 16, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .nav-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text-subtle);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding-right: 24px;
+    border-right: 1px solid var(--border-subtle);
+    margin-right: 8px;
+  }
+
+  .nav-link {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 16px 20px;
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+  }
+
+  .nav-link:hover {
+    color: var(--accent-gold);
+    border-bottom-color: var(--accent-gold);
+    background: rgba(212,168,67,0.04);
+  }
+
+  /* ─── ARTICLES CONTAINER ─── */
+  .articles-container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 60px 40px 100px;
+  }
+
+  /* ─── ARTICLE CARD ─── */
+  .article {
+    margin-bottom: 80px;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+    position: relative;
+  }
+
+  .article.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  .article-header {
+    position: relative;
+    padding: 44px 50px 36px;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    background: linear-gradient(135deg, rgba(212,168,67,0.06) 0%, transparent 60%);
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+  }
+
+  .article-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--accent-gold), transparent);
+  }
+
+  .article-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent-gold);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .article-number::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+    max-width: 80px;
+  }
+
+  .article-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.7rem, 3.5vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.2;
+    color: #f0ece4;
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+  }
+
+  .article-byline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .byline-author {
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    color: var(--accent-amber);
+    font-weight: 400;
+  }
+
+  .byline-sep { color: var(--text-subtle); }
+
+  /* ─── ARTICLE BODY ─── */
+  .article-body {
+    padding: 44px 50px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-top: none;
+    font-size: 0.975rem;
+    line-height: 1.9;
+    color: #ccc9c3;
+  }
+
+  .article-body p {
+    margin-bottom: 1.3em;
+  }
+
+  .article-body p:last-child { margin-bottom: 0; }
+
+  .article-body em {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05em;
+    color: var(--accent-amber);
+    font-style: italic;
+  }
+
+  .drop-cap::first-letter {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 4.2em;
+    font-weight: 700;
+    color: var(--accent-gold);
+    float: left;
+    line-height: 0.8;
+    margin: 0.08em 0.12em 0 0;
+  }
+
+  /* ─── ARTICLE FOOTER ─── */
+  .article-footer {
+    padding: 32px 50px;
+    background: rgba(212,168,67,0.03);
+    border: 1px solid var(--border);
+    border-top: 1px solid var(--border-subtle);
+    border-radius: 0 0 4px 4px;
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  @media (max-width: 600px) {
+    .footer-grid { grid-template-columns: 1fr; }
+  }
+
+  .footer-section-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .footer-section-title::before {
+    content: '◆';
+    font-size: 0.4em;
+  }
+
+  .author-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .author-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    color: #f0ece4;
+    font-weight: 600;
+  }
+
+  .author-detail {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .author-detail::before {
+    content: '—';
+    color: var(--text-subtle);
+    font-size: 0.7em;
+  }
+
+  .references-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .references-list li {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .references-list li::before {
+    content: counter(ref-counter);
+    counter-increment: ref-counter;
+    position: absolute;
+    left: 0;
+    color: var(--accent-gold);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7em;
+  }
+
+  .references-list {
+    counter-reset: ref-counter;
+  }
+
+  .ref-link {
+    color: var(--accent-blue);
+    text-decoration: none;
+    word-break: break-all;
+    font-size: 0.72rem;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+  .ref-link:hover { opacity: 1; }
+
+  /* ─── DIVIDER ─── */
+  .article-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 60px 0;
+    color: var(--text-subtle);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .article-divider::before,
+  .article-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border-subtle), transparent);
+  }
+
+  /* ─── FOOTER ─── */
+  .site-footer {
+    border-top: 1px solid var(--border-subtle);
+    padding: 40px;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 680px) {
+    .article-header,
+    .article-body,
+    .article-footer { padding-left: 28px; padding-right: 28px; }
+    .articles-container { padding: 40px 20px 80px; }
+    .article-nav { padding: 0 20px; }
+  }
+
+  /* ─── PULSE DECORATION ─── */
+  @keyframes pulse-ring {
+    0%   { transform: scale(1); opacity: 0.3; }
+    100% { transform: scale(1.4); opacity: 0; }
+  }
+
+  .radiation-icon {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    position: relative;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  .radiation-icon::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px solid var(--accent-gold);
+    animation: pulse-ring 2s ease-out infinite;
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── HERO ─── -->
+<header class="hero">
+  <div class="atom-ring"></div>
+  <div class="competition-tag"><span class="radiation-icon"></span> Article Writing Competition · Research Unit</div>
+  <h1>Nuclear Science &<br><span>Radiation</span></h1>
+  <p class="hero-sub">Mahamaya Girls' College, Kandy &nbsp;·&nbsp; Student Research Articles</p>
+</header>
+
+<!-- ─── NAV ─── -->
+<nav class="article-nav">
+  <span class="nav-label">Articles</span>
+  <a class="nav-link" href="#article-1">Benefits of Radiation</a>
+  <a class="nav-link" href="#article-2">Nuclear Waste Disposal</a>
+  <a class="nav-link" href="#article-3">Safety in Nuclear Plants</a>
+  <a class="nav-link" href="#article-4">World Nuclear Regulation</a>
+</nav>
+
+<!-- ─── MAIN ─── -->
+<main class="articles-container">
+
+  <!-- ═══ ARTICLE 1 ═══ -->
+  <article class="article" id="article-1">
+    <div class="article-header">
+      <div class="article-number">Article 01</div>
+      <h2 class="article-title">Benefits of Radiation for Humans</h2>
+      <div class="article-byline">
+        <span class="byline-author">By Senuli Rashwitha Menon</span>
+        <span class="byline-sep">·</span>
+        <span>Grade 8E &nbsp;·&nbsp; Mahamaya Girls' College, Kandy</span>
+      </div>
+    </div>
+
+    <div class="article-body">
+      <p class="drop-cap">Have you ever heard the word <em>radiation</em> and felt a little confused or even worried? I did. The word sounded serious and even a bit dangerous. But then I started wondering—what exactly is radiation? Is it always harmful, or can it actually help us?</p>
+
+      <p>When I learned more, I discovered that radiation is simply energy that travels in waves or tiny particles. It is invisible, but it exists all around us. That made me think—if we cannot even see it, how does it help people?</p>
+
+      <p>One place where radiation helps a lot is in hospitals. Imagine a doctor trying to understand what is happening inside our bodies. Without opening the body, how could they see bones or organs? This is where machines like X-rays and CT scans help. They use radiation to create images inside the body so doctors can find broken bones, tumors, or other problems.</p>
+
+      <p>Radiation can also help treat diseases. In a treatment called radiation therapy, powerful rays are carefully used to destroy cancer cells. It feels almost like invisible helpers fighting illness inside the body.</p>
+
+      <p>Hospitals also need to keep everything very clean and safe. Radiation helps here too. It is used to sterilize medical equipment such as surgical tools, gloves, and medical supplies. By killing harmful germs, it helps protect patients from infections.</p>
+
+      <p>Radiation even helps with something we all care about—food. Sometimes food spoils because of bacteria. Scientists can use radiation to remove harmful bacteria and keep food fresh for longer.</p>
+
+      <p>Farmers also benefit from radiation. Scientists use it to develop stronger crops that grow better and resist diseases. Radiation is also used to control pests that damage crops.</p>
+
+      <p>Radiation helps produce electricity in nuclear power plants and helps industries check materials for hidden defects. Scientists even use it to study tiny atoms and learn more about how our world works.</p>
+
+      <p>So should we always be afraid of radiation? I don't think so. Like many powerful things, it depends on how we use it. When used carefully and wisely, radiation becomes a helpful tool for humans.</p>
+
+      <p>Now when I hear the word <em>radiation</em>, I no longer think only about danger. I think about something invisible but powerful that quietly helps doctors, scientists, farmers, and many others make our world healthier and safer.</p>
+    </div>
+
+    <div class="article-footer">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-section-title">Author</div>
+          <div class="author-card">
+            <div class="author-name">Senuli Rashwitha Menon</div>
+            <div class="author-detail">Age 12</div>
+            <div class="author-detail">Grade 8E</div>
+            <div class="author-detail">Mahamaya Girls' College, Kandy</div>
+            <div class="author-detail">Contact: 0773222589 / 0779723569</div>
+          </div>
+        </div>
+        <div>
+          <div class="footer-section-title">References</div>
+          <ol class="references-list">
+            <li>World Health Organization (WHO). <em>Radiation and Health.</em></li>
+            <li>International Atomic Energy Agency (IAEA). <em>Applications of Radiation.</em></li>
+            <li>National Cancer Institute. <em>Radiation Therapy for Cancer.</em></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <div class="article-divider">· · ·</div>
+
+  <!-- ═══ ARTICLE 2 ═══ -->
+  <article class="article" id="article-2">
+    <div class="article-header">
+      <div class="article-number">Article 02</div>
+      <h2 class="article-title">Rules, Policies and Procedures on the Disposal of Nuclear Waste</h2>
+      <div class="article-byline">
+        <span class="byline-author">By Omindie Karunawansha</span>
+      </div>
+    </div>
+
+    <div class="article-body">
+      <p class="drop-cap">The disposal of nuclear materials and radioactive elements is a highly regulated process due to the threats these waste pose on human health and the environment. Primarily, nuclear waste generators are designed to minimize waste production through proper design and operation. Waste produced must be separated into categories based on half-life and radioactivity level. Combustible waste is incinerated and solid waste is compacted to reduce the volume by up to 100 times. Then waste is sealed in specialized containers, such as steel drums, copper canisters or concrete boxes to prevent any chance of radiation exposure to humans, animals or any type of pollution.</p>
+
+      <p>Radioactivity of the waste decays with time, so low-level waste which are lightly contaminated can be disposed in a very straightforward manner and can be undertaken safely almost anywhere. However, high-level waste must be stored in secure containers at least for about 50 years before they can be disposed. Used fuel can have radioactive elements and these are usually stored under water for at least five years before solidifying and transferring into a dry storage facility. Most of the radioactive waste produced however are usually disposed by implementing Deep Geological Disposal. This involves placing waste 250 to 1000 m deep in stable rock formations. Other final disposal options include Near-Surface disposal (for Low-level and short-lived Intermediate-level waste) and Borehole disposal (for smaller volumes).</p>
+    </div>
+
+    <div class="article-footer">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-section-title">Author</div>
+          <div class="author-card">
+            <div class="author-name">Omindie Karunawansha</div>
+          </div>
+        </div>
+        <div>
+          <div class="footer-section-title">References</div>
+          <ol class="references-list">
+            <li><a class="ref-link" href="https://world-nuclear.org/information-library/nuclear-fuel-cycle/nuclear-waste/storage-and-disposal-of-radioactive-waste" target="_blank">world-nuclear.org — Storage and Disposal of Radioactive Waste</a></li>
+            <li><em>National Policy on Management of Radioactive Waste and Spent Nuclear Fuel (2025–2031).</em> Ad-Hoc Working Group, January 2025.</li>
+            <li><em>National Policy on Radioactive Waste Management Sri Lanka.</em> Sri Lanka Atomic Energy Regulatory Council.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <div class="article-divider">· · ·</div>
+
+  <!-- ═══ ARTICLE 3 ═══ -->
+  <article class="article" id="article-3">
+    <div class="article-header">
+      <div class="article-number">Article 03</div>
+      <h2 class="article-title">Safety Procedures in Nuclear Power Plants &amp; Reactors</h2>
+      <div class="article-byline">
+        <span>Research Unit &nbsp;·&nbsp; Mahamaya Girls' College, Kandy</span>
+      </div>
+    </div>
+
+    <div class="article-body">
+      <p class="drop-cap">Safety conditions are performed to maintained &amp; inspected regularly, and upgraded when necessary to ensure plants meet relevant outcomes which targets for the outcome they intended to results. Canada is home to several nuclear power plants globally. In this technology, various types of nuclear reactors were created, mainly the pressurized water reactor which is known as PWR and boiling water reactor which is known as BWR.</p>
+
+      <p>A pressurized water reactor uses water under high pressure, circulating within the primary circuit to remove heat from the core, whereas in a boiling reactor, heated water is boiled at a lower pressure and the resulting steam is bought directly to the turbine. Normally nuclear power plant consists of several parts which combined to perform the final output of electricity, which is produced by converting nuclear energy into heat which is then used to create steam that drives turbines connected to electric generators.</p>
+
+      <p>According to International Atomic Energy Emergency, Safety conditions in this type of nuclear power plant is relies on "3Cs" Control the power, Cool the fuel, Contain radioactivity using defense-in-depth barriers which composed of radioactive material is separated from the environment by multiple layers, the fuel cladding, the reactor pressure vessel, and a thick reinforced concrete containment building. Then we have automatic shutdown systems, these systems are designed to immediately stop the nuclear chain reaction if fuel temperature rises or other anomalies occur. Then we comeacross cooling systems which have passive and active systems maintain fuel cooling, even without electricity, to prevent core damage.</p>
+
+      <p>They are the key safety systems and procedures. Based on these three operational safety protocols have built on. They are composed of safety culture, regulatory oversight, maintenance &amp; training and security measures. In safety culture personnel are trained to understand how their actions impact the 3Cs. Regulatory oversight which demanded based on International Atomic Energy Emergency and national regulators provide strict and regular inspections and ensuring a strong safety culture. Plants have robust procedures, including exclusion zones and emergency planning to protect workers and the public from radiation exposure. Procedures also ensure the environmental safety as it should focus on preventing the release of radioactive materials into the environment.</p>
+    </div>
+
+    <div class="article-footer">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-section-title">Published By</div>
+          <div class="author-card">
+            <div class="author-name">Research Unit</div>
+            <div class="author-detail">Mahamaya Girls' College, Kandy</div>
+            <div class="author-detail">Article Writing Competition</div>
+          </div>
+        </div>
+        <div>
+          <div class="footer-section-title">References</div>
+          <ol class="references-list">
+            <li><a class="ref-link" href="https://www-pub.iaea.org/MTCD/Publications/PDF/Pub1715web-46541668.pdf" target="_blank">IAEA — Nuclear Safety Publication (Accessed 18.03.2026)</a></li>
+            <li><a class="ref-link" href="https://youtu.be/mynMhxv7AHc" target="_blank">YouTube — Nuclear Safety Overview (Accessed 18.03.2026)</a></li>
+            <li><a class="ref-link" href="https://www.energy.gov/ehss/nuclear-safety" target="_blank">U.S. Department of Energy — Nuclear Safety (Accessed 18.03.2026)</a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <div class="article-divider">· · ·</div>
+
+  <!-- ═══ ARTICLE 4 ═══ -->
+  <article class="article" id="article-4">
+    <div class="article-header">
+      <div class="article-number">Article 04</div>
+      <h2 class="article-title">World Nuclear Energy Regulatory Rules and Procedures</h2>
+      <div class="article-byline">
+        <span class="byline-author">By Sayuri Widyarathne</span>
+        <span class="byline-sep">·</span>
+        <span>B.Sc. (UG) — University of Colombo</span>
+      </div>
+    </div>
+
+    <div class="article-body">
+      <p class="drop-cap">Nuclear energy powers about 10% of the world's electricity, making robust regulation essential for safety and security.</p>
+
+      <p>The International Atomic Energy Agency (IAEA), established in 1957, forms the backbone of global nuclear oversight. It sets international safety standards, conducts inspections, and ensures nuclear materials aren't diverted for weapons use. Over 170 countries work within its safeguards framework.</p>
+
+      <p>Alongside the IAEA, the Nuclear Non-Proliferation Treaty (NPT, 1968) remains the cornerstone of international nuclear law. Other than that, individual nations maintain their own regulators which enforce strict licensing, inspection, and emergency preparedness procedures.</p>
+
+      <p>Therefore, at its core, nuclear regulation has one clear goal: keeping people and the planet safe, no matter how great the demand for energy.</p>
+    </div>
+
+    <div class="article-footer">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-section-title">Author</div>
+          <div class="author-card">
+            <div class="author-name">Sayuri Widyarathne</div>
+            <div class="author-detail">B.Sc. (UG) — University of Colombo</div>
+            <div class="author-detail">Graduateship in Chemistry (UG) — Institute of Chemistry Ceylon</div>
+            <div class="author-detail">Alumna — Mahamaya Girls' College, Kandy</div>
+          </div>
+        </div>
+        <div>
+          <div class="footer-section-title">References</div>
+          <ol class="references-list">
+            <li>World Nuclear Association. <em>Nuclear Power in the World Today.</em> <a class="ref-link" href="https://world-nuclear.org/information-library/current-and-future-generation/nuclear-power-in-the-world-today" target="_blank">world-nuclear.org</a></li>
+            <li>International Atomic Energy Agency. <em>About the IAEA.</em> <a class="ref-link" href="https://www.iaea.org/about" target="_blank">iaea.org/about</a></li>
+            <li>United Nations. <em>Treaty on the Non-Proliferation of Nuclear Weapons (NPT).</em> UN Office for Disarmament Affairs: New York, 1968. <a class="ref-link" href="https://www.un.org/disarmament/wmd/nuclear/npt" target="_blank">un.org</a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </article>
+
+</main>
+
+<!-- ─── FOOTER ─── -->
+<footer class="site-footer">
+  <p>Mahamaya Girls' College, Kandy &nbsp;·&nbsp; Research Unit &nbsp;·&nbsp; Article Writing Competition</p>
+  <p style="margin-top:8px; color: var(--text-subtle);">Nuclear Science Series &nbsp;·&nbsp; Student &amp; Alumni Publications</p>
+</footer>
+
+<script>
+  // Intersection Observer for fade-in
+  const articles = document.querySelectorAll('.article');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+  articles.forEach(a => observer.observe(a));
+
+  // Stagger first article immediately
+  setTimeout(() => {
+    document.querySelector('.article').classList.add('visible');
+  }, 200);
+</script>
+</body>
+</html>

@@ -1,11 +1,4 @@
-<!-- ============================================================
-     reactor-simulator.component.html
-     Full Angular template — zero jQuery/DOM manipulation.
-     All state flows through the ReactorState binding.
-     ============================================================ -->
 <div class="smr-host">
-
-  <!-- ── MAIN GRID ──────────────────────────────────────────── -->
   <div class="main-content">
 
     <!-- CANVAS PANEL -->
@@ -41,7 +34,12 @@
         <div class="slider-row">
           <div class="slider-header">
             <span class="slider-name">⬛ Boron Control Rods</span>
-            <span class="slider-val">{{ rodLabel }}</span>
+            <span class="slider-val">
+              {{ rodLabel }}
+              <span class="scram-override" *ngIf="rodScrammed">
+                ⚠ SCRAM: {{ actualRodPct }}% IN
+              </span>
+            </span>
           </div>
           <input
             type="range" class="rod-slider"
@@ -50,9 +48,7 @@
             (input)="onRodChange(+$any($event.target).value)"
           />
           <div class="slider-ticks">
-            <span>Withdrawn (0%)</span>
-            <span>50%</span>
-            <span>Full IN (100%)</span>
+            <span>Withdrawn (0%)</span><span>50%</span><span>Full IN (100%)</span>
           </div>
         </div>
 
@@ -60,7 +56,12 @@
         <div class="slider-row">
           <div class="slider-header">
             <span class="slider-name">💧 Coolant Pump Speed</span>
-            <span class="slider-val">{{ pumpValue }}%</span>
+            <span class="slider-val">
+              {{ pumpValue }}%
+              <span class="em-override" *ngIf="state && state.pumpSpeed !== pumpValue">
+                (actual: {{ state.pumpSpeed | number:'1.0-0' }}%)
+              </span>
+            </span>
           </div>
           <input
             type="range" class="pump-slider"
@@ -69,9 +70,7 @@
             (input)="onPumpChange(+$any($event.target).value)"
           />
           <div class="slider-ticks">
-            <span>Off (0%)</span>
-            <span>50%</span>
-            <span>Max (100%)</span>
+            <span>Off (0%)</span><span>50%</span><span>Max (100%)</span>
           </div>
         </div>
 
@@ -79,21 +78,95 @@
         <div class="toggle-row">
           <span class="toggle-label">🔌 Connect Turbine / Generator</span>
           <label class="toggle">
-            <input
-              type="checkbox"
-              [checked]="turbineOn"
-              (change)="onTurbineChange($any($event.target).checked)"
-            />
+            <input type="checkbox" [checked]="turbineOn" (change)="onTurbineChange($any($event.target).checked)" />
             <span class="toggle-slider"></span>
           </label>
         </div>
 
-        <!-- Action Buttons -->
         <div class="btn-row">
-          <button class="btn btn-startup" (click)="onStartup()">▶ Startup Sequence</button>
+          <button class="btn btn-startup" (click)="onStartup()">▶ Startup</button>
           <button class="btn btn-reset"   (click)="onReset()">↺ Reset</button>
         </div>
         <button class="btn btn-scram" (click)="onScram()">🔴 EMERGENCY SCRAM</button>
+      </div>
+
+      <!-- ══ EMERGENCY SCENARIOS ════════════════════════════════ -->
+      <div class="cp-section cp-section--emergency">
+        <div class="cp-title">🚨 Emergency Scenarios</div>
+
+        <!-- Active emergency banner -->
+        <div class="em-banner" *ngIf="activeEmergency">
+          <div class="em-banner-row">
+            <span class="em-banner-icon">⚠</span>
+            <span class="em-banner-text" [ngSwitch]="activeEmergency">
+              <ng-container *ngSwitchCase="'LOCA'">LOSS OF COOLANT ACCIDENT</ng-container>
+              <ng-container *ngSwitchCase="'BLACKOUT'">STATION BLACKOUT</ng-container>
+              <ng-container *ngSwitchCase="'ROD_EJECTION'">ROD EJECTION</ng-container>
+            </span>
+            <button class="btn-em-clear" (click)="onClearEmergency()">✕ Clear</button>
+          </div>
+
+          <!-- ECCS response (LOCA) -->
+          <div *ngIf="activeEmergency === 'LOCA'" class="em-response">
+            <div class="em-explain">
+              <b>Safety System:</b> ECCS (Emergency Core Cooling System) injects borated water
+              into the core to absorb neutrons and remove decay heat. Boron captures neutrons,
+              suppressing the chain reaction while cooling the fuel.
+            </div>
+            <button class="btn btn-response" [disabled]="!canActivateECCS" (click)="onActivateECCS()">
+              {{ state?.eccsActive ? '✅ ECCS Online' : '💧 Activate ECCS' }}
+            </button>
+          </div>
+
+          <!-- Diesel generator response (Blackout) -->
+          <div *ngIf="activeEmergency === 'BLACKOUT'" class="em-response">
+            <div class="em-explain">
+              <b>Safety System:</b> Emergency diesel generators provide backup power to maintain
+              coolant circulation. Without cooling, decay heat (from short-lived fission products)
+              will continue to heat the core even after shutdown — the Fukushima mechanism.
+            </div>
+            <button class="btn btn-response" [disabled]="!canStartDiesel" (click)="onStartDiesel()">
+              {{ state?.dieselGenActive ? '✅ Diesels Running' : '⚡ Start Diesel Generators' }}
+            </button>
+          </div>
+
+          <!-- Rod ejection info -->
+          <div *ngIf="activeEmergency === 'ROD_EJECTION'" class="em-response">
+            <div class="em-explain">
+              <b>Safety Systems:</b> The negative temperature coefficient automatically slows
+              the reaction as temperature rises (hotter water → less dense → less moderation).
+              High neutron flux auto-SCRAM inserts all remaining rods. Notice the slider stays
+              at its old position — physical rod position is independent of the controller.
+            </div>
+          </div>
+        </div>
+
+        <!-- Trigger buttons (hidden while emergency active) -->
+        <div class="em-triggers" *ngIf="!activeEmergency">
+          <div class="em-card" (click)="onTriggerLOCA()">
+            <div class="em-card-icon">💧</div>
+            <div class="em-card-body">
+              <div class="em-card-title">LOCA</div>
+              <div class="em-card-sub">Coolant pipe rupture</div>
+            </div>
+          </div>
+
+          <div class="em-card" (click)="onTriggerBlackout()">
+            <div class="em-card-icon">⚡</div>
+            <div class="em-card-body">
+              <div class="em-card-title">Blackout</div>
+              <div class="em-card-sub">All AC power lost</div>
+            </div>
+          </div>
+
+          <div class="em-card" (click)="onTriggerRodEjection()">
+            <div class="em-card-icon">☢</div>
+            <div class="em-card-body">
+              <div class="em-card-title">Rod Ejection</div>
+              <div class="em-card-sub">Drive mechanism failure</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ── CORE STATUS ─────────────────────────────────────── -->
@@ -102,65 +175,46 @@
 
         <div class="gauge-row">
           <span class="gauge-label">Neutron Flux</span>
-          <div class="gauge-track">
-            <div class="gauge-fill gauge-flux" [style.width.%]="gaugeFluxPct"></div>
-          </div>
+          <div class="gauge-track"><div class="gauge-fill gauge-flux" [style.width.%]="gaugeFluxPct"></div></div>
           <span class="gauge-val">{{ state ? (state.neutronFlux | number:'1.0-0') : '0' }}%</span>
         </div>
-
         <div class="gauge-row">
           <span class="gauge-label">Core Temp</span>
-          <div class="gauge-track">
-            <div class="gauge-fill gauge-temp" [style.width.%]="gaugeTempPct"></div>
-          </div>
+          <div class="gauge-track"><div class="gauge-fill gauge-temp" [style.width.%]="gaugeTempPct"></div></div>
           <span class="gauge-val">{{ state ? (state.coreTemp | number:'1.0-0') : '285' }}°C</span>
         </div>
-
         <div class="gauge-row">
           <span class="gauge-label">Xenon-135</span>
-          <div class="gauge-track">
-            <div class="gauge-fill gauge-xenon" [style.width.%]="gaugeXenonPct"></div>
-          </div>
+          <div class="gauge-track"><div class="gauge-fill gauge-xenon" [style.width.%]="gaugeXenonPct"></div></div>
           <span class="gauge-val">{{ state ? (state.xenonLevel | number:'1.0-0') : '0' }}%</span>
         </div>
-
         <div class="gauge-row">
           <span class="gauge-label">Steam Pressure</span>
-          <div class="gauge-track">
-            <div class="gauge-fill gauge-steam" [style.width.%]="gaugeSteamPct"></div>
-          </div>
+          <div class="gauge-track"><div class="gauge-fill gauge-steam" [style.width.%]="gaugeSteamPct"></div></div>
           <span class="gauge-val">{{ state ? (state.steamPressure | number:'1.0-0') : '0' }} b</span>
         </div>
-
         <div class="gauge-row">
           <span class="gauge-label">⚠ Meltdown Risk</span>
-          <div class="gauge-track">
-            <div class="gauge-fill gauge-risk" [style.width.%]="gaugeRiskPct"></div>
-          </div>
+          <div class="gauge-track"><div class="gauge-fill gauge-risk" [style.width.%]="gaugeRiskPct"></div></div>
           <span class="gauge-val gauge-val--danger">{{ state ? (state.meltdownRisk | number:'1.0-0') : '0' }}%</span>
         </div>
 
-        <!-- Readout grid -->
         <div class="readout-grid">
           <div class="readout-cell">
             <div class="r-val">{{ state ? (state.coreTemp | number:'1.0-0') : '285' }}</div>
-            <div class="r-unit">°C</div>
-            <div class="r-label">Core Temperature</div>
+            <div class="r-unit">°C</div><div class="r-label">Core Temp</div>
           </div>
           <div class="readout-cell">
             <div class="r-val">{{ state ? (state.steamPressure | number:'1.0-0') : '0' }}</div>
-            <div class="r-unit">bar</div>
-            <div class="r-label">Steam Pressure</div>
+            <div class="r-unit">bar</div><div class="r-label">Steam Pressure</div>
           </div>
           <div class="readout-cell">
-            <div class="r-val">{{ pumpValue }}</div>
-            <div class="r-unit">%</div>
-            <div class="r-label">Coolant Flow</div>
+            <div class="r-val">{{ state ? (state.pumpSpeed | number:'1.0-0') : '60' }}</div>
+            <div class="r-unit">%</div><div class="r-label">Actual Flow</div>
           </div>
           <div class="readout-cell">
             <div class="r-val">{{ state ? (state.xenonLevel | number:'1.1-1') : '0.0' }}</div>
-            <div class="r-unit">%</div>
-            <div class="r-label">Xe-135 Level</div>
+            <div class="r-unit">%</div><div class="r-label">Xe-135</div>
           </div>
         </div>
       </div>
@@ -169,21 +223,20 @@
       <div class="cp-section">
         <div class="xenon-warning" [class.visible]="showXenonWarning">
           <strong>⚠ XENON DEAD ZONE</strong>
-          Xenon-135 is absorbing all available neutrons. The reactor cannot restart for several
-          simulated hours until Xe-135 decays naturally. This is the physics of why reactors
-          shut down rather than explode.
+          Xenon-135 is absorbing all available neutrons. Reactor cannot restart for several
+          simulated hours until Xe-135 decays naturally.
         </div>
-
         <div class="temp-warning" [class.visible]="showTempWarning">
-          <strong>🔥 HIGH TEMPERATURE WARNING</strong>
-          Core temperature is approaching dangerous levels. Increase coolant flow or insert
-          control rods immediately.
+          <strong>🔥 HIGH TEMPERATURE</strong>
+          Core temperature approaching dangerous levels. Increase coolant or insert rods.
         </div>
-
         <div class="info-card" *ngIf="showNegTempInfo">
-          <b>Negative Temperature Coefficient:</b> Water at higher temperatures is less dense
-          and moderates neutrons less effectively, naturally slowing the reaction — a built-in
-          safety mechanism.
+          <b>Negative Temperature Coefficient:</b> Hotter, less-dense water moderates neutrons
+          less effectively — a built-in self-regulating safety mechanism.
+        </div>
+        <div class="info-card" *ngIf="state?.pressureReliefOpen">
+          <b>🔧 Pressure Relief Valve open</b> — automatically venting steam to protect
+          the primary pressure boundary from overpressure rupture.
         </div>
       </div>
 
@@ -191,11 +244,8 @@
       <div class="cp-section">
         <div class="cp-title">📋 Event Log</div>
         <div class="event-log">
-          <ng-container *ngIf="state ? state.events.length : 0; else initLog">
-            <div
-              class="log-entry"
-              *ngFor="let ev of state.events; trackBy: trackLogById"
-            >
+          <ng-container *ngIf="state?.events?.length; else initLog">
+            <div class="log-entry" *ngFor="let ev of state.events; trackBy: trackLogById">
               <span class="log-time">{{ ev.time }}</span>
               <span class="log-type" [ngClass]="ev.type">{{ ev.type }}</span>
               <span class="log-msg">{{ ev.msg }}</span>
@@ -221,10 +271,10 @@
           <div class="legend-item"><div class="legend-dot" style="background:#64748b"></div>Graphite</div>
           <div class="legend-item"><div class="legend-dot" style="background:#1a252f"></div>Control Rods</div>
           <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div>Hot Fuel</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#00b4ff"></div>ECCS Water</div>
         </div>
       </div>
 
-    </aside><!-- /control-panel -->
-  </div><!-- /main-content -->
-</div><!-- /smr-host -->
-
+    </aside>
+  </div>
+</div>

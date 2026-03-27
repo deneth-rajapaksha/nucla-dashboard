@@ -1,27 +1,19 @@
 // ============================================================
-//  reactor-simulator.component.ts  (FIXED)
-//  Root "smart" component — wires services to the template.
-//  Uses OnPush change detection: only re-renders when state$
-//  emits, keeping frame-rate impact minimal.
+//  reactor-simulator.component.ts  v2
 //
-//  Key changes vs original:
-//  1. Slider input is RAF-throttled: during a fast drag, the UI
-//     value updates immediately for responsiveness, but the physics
-//     service is only notified once per animation frame (via
-//     requestAnimationFrame), preventing thousands of redundant
-//     setRodInsertion/setPumpSpeed calls per second on mobile.
-//  2. _inputRaf handle tracked and cancelled in ngOnDestroy.
+//  v2 changes:
+//  • SCRAM no longer moves the rod slider — onScram() removed
+//    the `this.rodValue = 100` line. The physical rod position
+//    is reflected in the canvas (state.rodInsertion) while the
+//    slider stays wherever the operator left it.
+//  • rodScrammed getter: true when physical rods ≠ slider value.
+//  • Emergency scenario handlers wired to new service methods.
+//  • Slider input RAF-throttled (unchanged from v1).
 // ============================================================
 import {
-  Component,
-  OnInit,
-  OnDestroy,
-  AfterViewInit,
-  ViewChild,
-  ElementRef,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  NgZone,
+  Component, OnInit, OnDestroy, AfterViewInit,
+  ViewChild, ElementRef,
+  ChangeDetectionStrategy, ChangeDetectorRef, NgZone,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -32,11 +24,8 @@ import { ReactorRendererService }  from './services/reactor-renderer.service';
 import { ReactorState, ReactorStatus } from './models/reactor.models';
 
 const STATUS_CSS: Record<ReactorStatus, string> = {
-  SHUTDOWN:       'shutdown',
-  SUBCRITICAL:    'subcrit',
-  'PARTIAL POWER':'partial',
-  'FULL POWER':   'fullpower',
-  SCRAM:          'scram',
+  SHUTDOWN: 'shutdown', SUBCRITICAL: 'subcrit',
+  'PARTIAL POWER': 'partial', 'FULL POWER': 'fullpower', SCRAM: 'scram',
 };
 
 @Component({
@@ -51,25 +40,35 @@ export class ReactorSimulatorComponent implements OnInit, AfterViewInit, OnDestr
   @ViewChild('reactorCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('reactorPanel')  panelRef!:  ElementRef<HTMLDivElement>;
 
-  // ── Bound state ────────────────────────────────────────
   state!: ReactorState;
 
-  // ── Slider models (two-way binding) ────────────────────
+  // Slider values (UI only — physical position is in state.rodInsertion)
   rodValue  = 100;
   pumpValue = 60;
   turbineOn = true;
 
-  // ── Pending slider values for RAF-throttled flush ──────
+  // RAF-throttled pending slider values
   private _pendingRod:  number | null = null;
   private _pendingPump: number | null = null;
   private _inputRaf:    number | null = null;
 
-  // ── Derived display values ─────────────────────────────
+  // ── Derived display ───────────────────────────────────────
+
   get rodLabel(): string {
     if (this.rodValue === 100) return '100% (FULL IN)';
     if (this.rodValue === 0)   return '0% (WITHDRAWN)';
     return `${this.rodValue}%`;
   }
+
+  /**
+   * True when SCRAM has inserted the rods beyond the slider position.
+   * Shows the operator that the physical rod position differs from the control.
+   */
+  get rodScrammed(): boolean {
+    return !!(this.state?.isScrammed && this.state.rodInsertion > this.rodValue);
+  }
+
+  get actualRodPct(): number { return this.state?.rodInsertion ?? this.rodValue; }
 
   get statusCssClass(): string {
     return this.state ? STATUS_CSS[this.state.reactorStatus] ?? 'shutdown' : 'shutdown';
@@ -84,9 +83,7 @@ export class ReactorSimulatorComponent implements OnInit, AfterViewInit, OnDestr
 
   get gaugeFluxPct():  number { return this.state?.neutronFlux  ?? 0; }
   get gaugeTempPct():  number {
-    return this.state
-      ? Math.min(100, Math.max(0, (this.state.coreTemp - 280) / 170 * 100))
-      : 0;
+    return this.state ? Math.min(100, Math.max(0, (this.state.coreTemp - 280) / 170 * 100)) : 0;
   }
   get gaugeXenonPct(): number { return this.state?.xenonLevel   ?? 0; }
   get gaugeSteamPct(): number {
@@ -94,17 +91,15 @@ export class ReactorSimulatorComponent implements OnInit, AfterViewInit, OnDestr
   }
   get gaugeRiskPct():  number { return this.state?.meltdownRisk ?? 0; }
 
-  get showXenonWarning(): boolean {
-    return !!(this.state && this.state.xenonLevel > 55 && this.state.neutronFlux < 10);
-  }
-  get showTempWarning(): boolean {
-    return !!(this.state && this.state.coreTemp > 380);
-  }
-  get showNegTempInfo(): boolean {
-    return !!(this.state && this.state.neutronFlux > 40);
-  }
+  get showXenonWarning():  boolean { return !!(this.state?.xenonLevel  > 55 && this.state?.neutronFlux < 10); }
+  get showTempWarning():   boolean { return !!(this.state?.coreTemp    > 380); }
+  get showNegTempInfo():   boolean { return !!(this.state?.neutronFlux > 40); }
 
-  // ── RAF handle for render loop ─────────────────────────
+  get activeEmergency(): string | null { return this.state?.emergencyMode ?? null; }
+  get canActivateECCS(): boolean  { return this.state?.emergencyMode === 'LOCA' && !this.state?.eccsActive; }
+  get canStartDiesel():  boolean  { return this.state?.emergencyMode === 'BLACKOUT' && !this.state?.dieselGenActive; }
+  get anyEmergency():    boolean  { return !!this.state?.emergencyMode; }
+
   private _renderRaf:       number | null = null;
   private _sub!:            Subscription;
   private _resizeObserver!: ResizeObserver;
@@ -116,13 +111,15 @@ export class ReactorSimulatorComponent implements OnInit, AfterViewInit, OnDestr
     private zone: NgZone,
   ) {}
 
-  // ══════════════════════════════════════════════════════
-  //  Lifecycle
-  // ══════════════════════════════════════════════════════
+  // ══ Lifecycle ════════════════════════════════════════════
 
   ngOnInit(): void {
     this._sub = this.sim.state$.subscribe((s) => {
       this.state = s;
+      // Keep slider in sync with startup() which resets rods to 0
+      if (!s.isScrammed && s.rodInsertion === 0 && this.rodValue === 100) {
+        this.rodValue = 0;
+      }
       this.cdr.markForCheck();
     });
     this.sim.start();
@@ -138,9 +135,7 @@ export class ReactorSimulatorComponent implements OnInit, AfterViewInit, OnDestr
     this.zone.runOutsideAngular(() => {
       this._resizeObserver = new ResizeObserver((entries) => {
         const { width, height } = entries[0].contentRect;
-        if (width > 0 && height > 0) {
-          this.rndr.resize(width, height);
-        }
+        if (width > 0 && height > 0) this.rndr.resize(width, height);
       });
       this._resizeObserver.observe(panel);
 
@@ -160,17 +155,10 @@ export class ReactorSimulatorComponent implements OnInit, AfterViewInit, OnDestr
     this._resizeObserver?.disconnect();
   }
 
-  // ══════════════════════════════════════════════════════
-  //  Control event handlers
-  //
-  //  Slider onInput: update the visible label immediately (so the
-  //  UI feels snappy) but queue the actual physics mutation for the
-  //  next animation frame.  If the user drags 200 px in one frame
-  //  we only call setRodInsertion once with the final value.
-  // ══════════════════════════════════════════════════════
+  // ══ Control handlers ═════════════════════════════════════
 
   onRodChange(value: number): void {
-    this.rodValue    = value;        // UI label updates instantly
+    this.rodValue    = value;
     this._pendingRod = value;
     this._scheduleInputFlush();
   }
@@ -182,7 +170,7 @@ export class ReactorSimulatorComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   private _scheduleInputFlush(): void {
-    if (this._inputRaf !== null) return; // already scheduled for this frame
+    if (this._inputRaf !== null) return;
     this._inputRaf = requestAnimationFrame(() => {
       if (this._pendingRod  !== null) { this.sim.setRodInsertion(this._pendingRod);  this._pendingRod  = null; }
       if (this._pendingPump !== null) { this.sim.setPumpSpeed(this._pendingPump);     this._pendingPump = null; }
@@ -190,14 +178,14 @@ export class ReactorSimulatorComponent implements OnInit, AfterViewInit, OnDestr
     });
   }
 
-  onTurbineChange(value: boolean): void {
-    this.turbineOn = value;
-    this.sim.setTurbineOn(value);
-  }
+  onTurbineChange(v: boolean): void { this.turbineOn = v; this.sim.setTurbineOn(v); }
 
   onScram(): void {
     this.sim.scram();
-    this.rodValue = 100;
+    // ✅ v2 FIX: do NOT update this.rodValue here.
+    // The physical rods go to 100% (state.rodInsertion = 100),
+    // but the slider thumb stays exactly where the operator left it,
+    // showing the disconnect between "commanded" and "actual" position.
   }
 
   onStartup(): void {
@@ -208,16 +196,20 @@ export class ReactorSimulatorComponent implements OnInit, AfterViewInit, OnDestr
 
   onReset(): void {
     this.sim.reset();
-    this.rodValue  = 100;
-    this.pumpValue = 60;
-    this.turbineOn = true;
+    this.rodValue = 100; this.pumpValue = 60; this.turbineOn = true;
   }
 
-  // ══════════════════════════════════════════════════════
-  //  Template helpers
-  // ══════════════════════════════════════════════════════
+  // ══ Emergency handlers ═══════════════════════════════════
+
+  onTriggerLOCA():        void { this.sim.triggerLOCA(); }
+  onActivateECCS():       void { this.sim.activateECCS(); }
+  onTriggerBlackout():    void { this.sim.triggerBlackout(); this.turbineOn = false; }
+  onStartDiesel():        void { this.sim.startDieselGenerators(); }
+  onTriggerRodEjection(): void { this.sim.triggerRodEjection(); }
+  onClearEmergency():     void { this.sim.clearEmergency(); }
+
+  // ══ Template helpers ═════════════════════════════════════
 
   simTime(): string { return this.sim._fmtTime(); }
-
   trackLogById(_: number, ev: { id: number }) { return ev.id; }
 }

@@ -1,8 +1,3 @@
-// ============================================================
-//  reactor.models.ts
-//  All shared interfaces and types for the SMR simulator.
-// ============================================================
-
 export type ReactorStatus =
   | 'SHUTDOWN'
   | 'SUBCRITICAL'
@@ -10,7 +5,9 @@ export type ReactorStatus =
   | 'FULL POWER'
   | 'SCRAM';
 
-export type LogType = 'SYS' | 'INFO' | 'WARNING' | 'SCRAM' | 'ALERT';
+export type LogType = 'SYS' | 'INFO' | 'WARNING' | 'SCRAM' | 'ALERT' | 'EMERGENCY';
+
+export type EmergencyMode = 'LOCA' | 'BLACKOUT' | 'ROD_EJECTION' | null;
 
 export interface LogEvent {
   id: number;
@@ -21,34 +18,31 @@ export interface LogEvent {
 
 export interface ReactorState {
   // Controls (inputs)
-  rodInsertion: number; // 0 = fully withdrawn, 100 = fully inserted
-  pumpSpeed: number; // 0–100 %
+  rodInsertion: number;   // 0 = fully withdrawn, 100 = fully inserted (PHYSICAL position)
+  pumpSpeed: number;      // 0–100 %  (may be overridden by emergency physics)
   turbineOn: boolean;
 
   // Physics outputs
-  neutronFlux: number; // 0–100 %
-  coreTemp: number; // °C
-  xenonLevel: number; // 0–100 %
-  powerOutput: number; // MWe
-  steamPressure: number; // bar
+  neutronFlux: number;    // 0–100 %
+  coreTemp: number;       // °C
+  xenonLevel: number;     // 0–100 %
+  powerOutput: number;    // MWe
+  steamPressure: number;  // bar
   coolantOutTemp: number; // °C
-  meltdownRisk: number; // 0–100 %
-  thermalPower: number; // MWt
+  meltdownRisk: number;   // 0–100 %
+  thermalPower: number;   // MWt
 
   // Status
   reactorStatus: ReactorStatus;
   isScrammed: boolean;
-  simTime: number; // seconds
+  simTime: number;        // seconds
+
+  // Emergency scenario state
+  emergencyMode: EmergencyMode;
+  eccsActive: boolean;      // Emergency Core Cooling System
+  dieselGenActive: boolean; // Diesel generator backup power
+  pressureReliefOpen: boolean; // Automatic pressure relief valve
 
   // Event log
   events: LogEvent[];
 }
-
-export interface GaugeConfig {
-  label: string;
-  key: keyof ReactorState;
-  cssClass: string;
-  valueFormatter: (s: ReactorState) => string;
-  percentFn: (s: ReactorState) => number;
-}
-

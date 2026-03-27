@@ -15,8 +15,8 @@ import { ProfileService, UserProfile } from './features/profile/services/profile
       </button>
       
       <div class="p-6 flex items-center gap-3 overflow-hidden whitespace-nowrap">
-        <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg md:text-xl shadow-md shadow-blue-500/30 shrink-0">
-          N
+        <div class="w-8 h-8 md:w-10 md:h-10 shrink-0">
+          <img src="/favicon.ico" alt="NucLa Logo" class="w-full h-full object-contain" />
         </div>
         <h1 [ngClass]="isExpanded() ? 'opacity-100' : 'opacity-0 w-0'" class="text-2xl font-black text-slate-800 tracking-tight transition-all duration-300">NucLA</h1>
       </div>

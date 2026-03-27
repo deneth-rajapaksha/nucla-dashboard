@@ -114,7 +114,7 @@
               suppressing the chain reaction while cooling the fuel.
             </div>
             <button class="btn btn-response" [disabled]="!canActivateECCS" (click)="onActivateECCS()">
-              {{ state?.eccsActive ? '✅ ECCS Online' : '💧 Activate ECCS' }}
+              {{ state.eccsActive ? '✅ ECCS Online' : '💧 Activate ECCS' }}
             </button>
           </div>
 
@@ -126,7 +126,7 @@
               will continue to heat the core even after shutdown — the Fukushima mechanism.
             </div>
             <button class="btn btn-response" [disabled]="!canStartDiesel" (click)="onStartDiesel()">
-              {{ state?.dieselGenActive ? '✅ Diesels Running' : '⚡ Start Diesel Generators' }}
+              {{ state.dieselGenActive ? '✅ Diesels Running' : '⚡ Start Diesel Generators' }}
             </button>
           </div>
 
@@ -234,7 +234,7 @@
           <b>Negative Temperature Coefficient:</b> Hotter, less-dense water moderates neutrons
           less effectively — a built-in self-regulating safety mechanism.
         </div>
-        <div class="info-card" *ngIf="state?.pressureReliefOpen">
+        <div class="info-card" *ngIf="state.pressureReliefOpen">
           <b>🔧 Pressure Relief Valve open</b> — automatically venting steam to protect
           the primary pressure boundary from overpressure rupture.
         </div>
@@ -244,7 +244,7 @@
       <div class="cp-section">
         <div class="cp-title">📋 Event Log</div>
         <div class="event-log">
-          <ng-container *ngIf="state?.events?.length; else initLog">
+          <ng-container *ngIf="state.events.length; else initLog">
             <div class="log-entry" *ngFor="let ev of state.events; trackBy: trackLogById">
               <span class="log-time">{{ ev.time }}</span>
               <span class="log-type" [ngClass]="ev.type">{{ ev.type }}</span>

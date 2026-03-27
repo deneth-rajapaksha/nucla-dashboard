@@ -13,11 +13,10 @@ export const routes: Routes = [
         (m) => m.DashboardHomeComponent
       ),
   },
-  // Keep sidebar's "Articles" link functional without adding UI changes.
   {
     path: 'articles',
-    redirectTo: '/dashboard',
-    pathMatch: 'full',
+    loadComponent: () =>
+      import('./articles/articles.component').then((m) => m.ArticlesComponent),
   },
   {
     path: 'reactor',

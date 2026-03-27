@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, signal, inject } from '@angular/cor
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { ParticlesComponent } from '../particles.component';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../features/auth/services/auth.service';
@@ -13,7 +13,7 @@ type AuthView = 'none' | 'login' | 'signup' | 'forgot';
 @Component({
   selector: 'app-landing',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, ReactiveFormsModule, CommonModule, RouterLink],
+  imports: [MatIconModule, ReactiveFormsModule, CommonModule],
   templateUrl: './landing.component.html',
 })
 export class LandingComponent {
